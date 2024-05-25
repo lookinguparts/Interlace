@@ -12,12 +12,21 @@ Visit [Chromatik.co](https://chromatik.co) to download the latest version of Chr
 
 Read the [Chromatik User Guide](https://chromatik.co/guide).
 
-There is a Chromatik model in 'Models/InterlaceV1.lxm'.
+Download the [Interlace package JAR](https://github.com/lookinguparts/Interlace/releases) from releases.  Copy the JAR
+file to ~/Chromatik/Packages.  Once you have the package installed, you should be able to import the model.  Note that importing resources from the content package JAR is not currently working
+so you will need to download the model from the GitHub Repository and manually put it in ~/Chromatik/Models.
 
-There is a sample project in 'Projects/interlace3.lxp'.
 
-Download the model and project files from this repository.  Place them in
-~/Chromatik/Models and ~/Chromatik/Projects respectively.
+
+![Import](/assets/modelimport.gif)
+
+Choose 'InterlaceV1.lxm'.
+
+![Import2](/assets/modelimport2.png)
+
+If your Interlace content package JAR loaded properly, you should now have a
+StripSelector pattern available under the Test section.
+![StripSelector](/assets/stripselector.png)
 
 Custom Java Patterns
 ====================
