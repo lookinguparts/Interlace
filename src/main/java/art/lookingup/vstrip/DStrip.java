@@ -40,6 +40,7 @@ public class DStrip {
      */
     public DStrip chooseStripFromJoints(List<VJoint> joints, int jointSelector) {
         int jointNum = jointSelector;
+        if (joints.size() == 0) return null;
         if (jointNum == -1)
             jointNum = ThreadLocalRandom.current().nextInt(joints.size());
         VStrip nextStrip = joints.get(jointNum).vStrip;

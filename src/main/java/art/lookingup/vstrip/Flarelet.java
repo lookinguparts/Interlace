@@ -24,10 +24,31 @@ public class Flarelet {
     public List<DStrip> prevDStrips = new ArrayList<>();
     public List<DStrip> nextDStrips = new ArrayList<>();
     public int color = LXColor.rgba(255, 255, 255, 255);
+    // Whether the flarelet is enabled or not.  If not enabled, it will not render.
     public boolean enabled = true;
+    // The intensity of the flarelet.  This is a multiplier that can be used to adjust the intensity of the flarelet.
     public float intensity = 1.0f;
+    // The intensity at which we simply skip the rendering.
+    public float cutoutIntensity = 0.05f;
     public float flareWidth = -1.0f;
     public float palTVal = -1f;
+
+    // Time the flarelet was started.  Used for tracking fade-outs per flarelet.
+    public double startTime;
+    public double fadeTime;
+
+    // Application of FX
+    public int fx;
+    public float fxDepth;
+    public float fxFreq;
+
+    // Which palette swatch to use for the flarelet.
+    public int palette;
+
+    public Wavetable wavetable;
+
+    public float waveWidth;
+
 
     // When rendering position parametrically from 0 to 1, we need a pre-computed set of dStrips
     // that we intend to render on.
@@ -104,274 +125,68 @@ public class Flarelet {
         prevDStrips.clear();
     }
 
-
-
-    public void renderOnTopAtT(int[] colors, float baseSpeed, float defaultWidth, float slope,
-                               float maxValue, int waveform, int whichJoint, boolean initialTail,
-                               int whichEffect, float fxDepth, float cosineFreq) {
-        renderOnTopAtT(colors, baseSpeed, defaultWidth, slope, maxValue, waveform, whichJoint, initialTail, LXColor.Blend.ADD,
-                whichEffect, fxDepth, cosineFreq);
+    public boolean isRenderable() {
+        if ((!enabled) || (getFadeLevel() < cutoutIntensity)) return false;
+        return true;
     }
 
     /**
-     * Renders a 'flarelet'. Supports a number of different 'waveforms' centered at the current
-     * position.  Position will be incremented by baseSpeed + the flarelet's random speed component.
-     * This method will handle making sure there are enough DStrips so that the
-     * waveform can be rendered across multiple DStrips.  As the position approaches joints between
-     * the DStrips, we will pick additional DStrips to render on based on whichJoint.
-     * @param colors
-     * @param baseSpeed
-     * @param defaultWidth
-     * @param slope
-     * @param maxValue
-     * @param waveform
-     * @param whichJoint
+     * For flarelets that will be fading out, compute the intensity level based on the current time, the flare start
+     * time, and the flare fade time.
+     * @return
      */
-    public void renderOnTopAtT(int[] colors, float baseSpeed, float defaultWidth, float slope,
-                               float maxValue, int waveform, int whichJoint, boolean initialTail, LXColor.Blend blend,
-                               int whichEffect, float fxDepth, float cosineFreq) {
-        if (!enabled) return;
-        boolean needsCurrentDStripUpdate = false;
-        float resolvedWidth = defaultWidth;
-        if (flareWidth >= 0f)
-            resolvedWidth = flareWidth;
-
-        // Option to force the flarelet to render along a path.  In order to do this, if pathDStrips is set, we will initialize a mapping
-        // from a DStrip to a joint value when calling setPathDStrips.  Here we will force whichJoint to
-        // be assigned from that mapping.  Once we reach the end of the path, if we don't find a valid joint, we will use
-        // the value -2 to denote that we are at the end of the path and that the next dStrip should just be the first
-        // dStrip in the pre-defined path.
-        if (pathDStrips != null && !pathDStrips.isEmpty()) {
-            Integer pJoint = pathJoints.get(dStrip.vStrip.id);
-            if (pJoint != null) {
-                whichJoint = pJoint;
-            } else whichJoint = -2;
-            if (whichJoint == -1)
-                whichJoint = -2;
-        }
-        for (VStrip vStrip : vTop.strips) {
-            if (dStrip.vStrip.id == vStrip.id) {
-                // -- Render on our target light bar --
-                float minMax[] = renderWaveform(colors, dStrip, pos, resolvedWidth, slope, intensity * maxValue, waveform, blend);
-
-                if (whichEffect == 1) {
-                    VStripRender.randomGrayBaseDepth(colors, vStrip, LXColor.Blend.MULTIPLY, (int)(255*(1f - fxDepth)),
-                            (int)(255*fxDepth));
-                } else if (whichEffect == 2) {
-                    VStripRender.cosine(colors, vStrip, pos, cosineFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
-                }
-
-                // If whichJoint == -3, then we are rendering on a single strip and we don't want to make any
-                // joint decisions.
-                // TODO(tracy): Maybe we should just separate this usecase into a separate method in order to
-                // simplify the logic.  It could potentially be handled by just setting the pathDStrips to a single
-                // strip and then calling renderFlareletAtT but it would be nicer if there was a more direct way to
-                // handle this for the basic case.  Maybe this current method should be called
-                // renderOnTopology().  And then renderOnPath() and renderOnStrip().
-                if (whichJoint != -3) {
-                    // -- Fix up the set of lightbars that we are rendering over.
-                    int numPrevBars = -1 * (int) Math.floor(minMax[0]);
-                    int numNextBars = (int) Math.ceil(minMax[1] - 1.0f);
-                    if (!dStrip.forward) {
-                        int oldNumNextBars = numNextBars;
-                        numNextBars = numPrevBars;
-                        numPrevBars = oldNumNextBars;
-                    }
-                    // We need to handle the initial case, so we might need to add multiple next bars to our list.
-                    int prevWhichJoint = whichJoint;
-                    while (nextDStrips.size() < numNextBars) {
-                        DStrip nextDStrip;
-                        if (whichJoint == -2) {
-                            // TODO(tracy): Ugh, we need to prepopulate the look-ahead bars to fit our render but our next
-                            // joint is resolving as the end of the path so just select the beginning of the path.  This will
-                            // only work in the scenario for a single look-ahead.  To do it properly, we need to compute the whichJoint
-                            // value for each dStrip segment.  We already have the vStrip.id to nextJoint mapping computed
-                            // so we can use that.
-                            nextDStrip = pathDStrips.get(0);
-                            Integer pJoint = pathJoints.get(nextDStrip.vStrip.id);
-                            if (pJoint != null) {
-                                whichJoint = pJoint;
-                            }
-                            if (whichJoint == -1)
-                                whichJoint = -2;
-                        } else {
-                            if (nextDStrips.isEmpty())
-                                nextDStrip = dStrip.chooseNextStrip(whichJoint);
-                            else {
-                                Integer futureJoint = whichJoint;
-                                if (pathDStrips != null && !pathDStrips.isEmpty()) {
-                                    // If we a rendering along a preset path, figure out the future joint values.  If there is no
-                                    // valid joint value for a strip, then we are at the end of the path so we use the value -2 and
-                                    // then choose the next dStrip to be the first bar in the path.
-                                    // TODO(tracy): Ideally we would be able to support multiple connecting topologies but for now
-                                    // we just have one underlying joint network so we need to work around it for special path
-                                    // topologies.
-                                    futureJoint = pathJoints.get(nextDStrips.get(nextDStrips.size() - 1).vStrip.id);
-                                    if (futureJoint == null || futureJoint == -1)
-                                        futureJoint = -2;
-                                    whichJoint = futureJoint;
-                                }
-                                if (whichJoint == -2)
-                                    nextDStrip = pathDStrips.get(0);
-                                else
-                                    nextDStrip = nextDStrips.get(nextDStrips.size() - 1).chooseNextStrip(whichJoint);
-                            }
-                        }
-                        nextDStrips.add(nextDStrip);
-                    }
-
-                    // Pre-populate the previous dStrips if we want an initial tail.  Otherwise
-                    // these will be populated as we update the current bar to the next bar.
-                    while (initialTail && (prevDStrips.size() < numPrevBars)) {
-                        DStrip prevDStrip;
-                        if (prevDStrips.isEmpty())
-                            prevDStrip = dStrip.choosePrevStrip(whichJoint);
-                        else
-                            prevDStrip = prevDStrips.get(prevDStrips.size() - 1).choosePrevStrip(whichJoint);
-                        prevDStrips.add(prevDStrip);
-                    }
-
-                    // Garbage collect any old bars.
-                    // TODO(tracy): We should trim both nextDStrips and prevDStrips each time so for example if our slope changes
-                    // dynamically, we might want to reduce our prevDStrips and nextDStrips list.  It is only an optimization since
-                    // we will just render black in ADD mode which should have no effect but is just inefficient.
-                    if (prevDStrips.size() > numPrevBars && !prevDStrips.isEmpty()) {
-                        prevDStrips.remove(prevDStrips.size() - 1);
-                    }
-
-                    whichJoint = prevWhichJoint;
-
-                    // For the number of previous bars, render on each bar
-                    for (int j = 0; j < numPrevBars && j < prevDStrips.size(); j++) {
-                        DStrip prevDStrip = prevDStrips.get(j);
-                        // We need to compute the next bar pos but we need to account for any intermediate bars.
-                        float prevDStripPos = dStrip.computePrevStripPos(pos, prevDStrip);
-                        // DStrip lengths are normalized to 1.0, so we need to shift our compute distance based on
-                        // whether there are any intermediate dStrips.
-                        // TODO(tracy): This needs to be fixed for non-normalized rendering.
-                        if (prevDStrip.forward) prevDStripPos += j;
-                        else prevDStripPos -= j; //
-                        renderWaveform(colors, prevDStrip, prevDStripPos, resolvedWidth, slope, intensity * maxValue, waveform, blend);
-                        if (whichEffect == 1) {
-                            VStripRender.randomGrayBaseDepth(colors, prevDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
-                                    (int) (255 * fxDepth));
-                        } else if (whichEffect == 2) {
-                            VStripRender.cosine(colors, prevDStrip.vStrip, prevDStripPos, cosineFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
-                        }
-                    }
-
-                    for (int j = 0; j < numNextBars; j++) {
-                        DStrip nextDStrip = nextDStrips.get(j);
-                        float nextDStripPos = dStrip.computeNextStripPos(pos, nextDStrip);
-                        // TODO(tracy): This needs to be fixed for non-normalized rendering.
-                        if (nextDStrip.forward)
-                            nextDStripPos -= j; // shift the position to the left by the number of bars away it is actually at.
-                        else
-                            nextDStripPos += j;
-                        renderWaveform(colors, nextDStrip, nextDStripPos, resolvedWidth, slope, intensity * maxValue, waveform, blend);
-                        if (whichEffect == 1) {
-                            VStripRender.randomGrayBaseDepth(colors, nextDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
-                                    (int) (255 * fxDepth));
-                        } else if (whichEffect == 2) {
-                            VStripRender.cosine(colors, nextDStrip.vStrip, nextDStripPos, cosineFreq, 0f, 1f - fxDepth, fxDepth,
-                                    LXColor.Blend.MULTIPLY);
-                        }
-                    }
-                }
-                if (dStrip.forward) {
-                    pos += (baseSpeed + speed)/100f;
-                } else {
-                    pos -= (baseSpeed + speed)/100f;
-                }
-
-                if (pos <= 0.0 || pos >= 1.0f) {
-                    needsCurrentDStripUpdate = true;
-                }
-            }
-        }
-
-        if (needsCurrentDStripUpdate && whichJoint != -3) {
-            updateCurrentDStrip(whichJoint);
-        }
-    }
-    public void renderOnPathAtT(int[] colors, float paramT, float defaultWidth, float slope,
-                                float maxValue, int waveform, float maxGlobalPos) {
-        renderOnPathAtT(colors, paramT, defaultWidth, slope, maxValue, waveform, 0f, maxGlobalPos);
+    public float getFadeLevel() {
+        if (Math.abs(fadeTime) < 0.001f) return intensity;
+        float fadeLevel = 1f - (float) ((System.currentTimeMillis() - startTime)/fadeTime);
+        if (fadeLevel < 0f)
+            fadeLevel = 0f;
+        return fadeLevel * intensity;
     }
 
-    /**
-     * Renders a waveform on a pre-computed list of dStrips stored in pathBars.  Position is
-     * defined parametrically from 0 to 1 where 1 is at the end of the last dStrip.  Automatically
-     * adjusts to number of dStrips.
-     * @param colors
-     * @param paramT
-     * @param defaultWidth
-     * @param slope
-     * @param maxValue
-     * @param waveform
-     */
-    public void renderOnPathAtT(int[] colors, float paramT, float defaultWidth, float slope,
-                                float maxValue, int waveform, float startMargin, float maxGlobalPos) {
-        if (!enabled) return;
-        float resolvedWidth = defaultWidth;
-        if (flareWidth >= 0f) resolvedWidth = flareWidth;
-        for (VStrip vStrip: vTop.strips) {
-            int dStripNum = 0;
-            for (DStrip currentDStrip : pathDStrips) {
-                if (currentDStrip.vStrip.id == vStrip.id && !currentDStrip.disableRender) {
-                    // -- Render on our target dStrip and adjust pos based on which strip number.
-                    float localDStripPos = paramT * (maxGlobalPos + startMargin) - startMargin;
-                    localDStripPos -= dStripNum;
-                    if (!currentDStrip.forward)
-                        localDStripPos = 1.0f - localDStripPos;
-
-                    renderWaveform(colors, currentDStrip, localDStripPos, resolvedWidth, slope, intensity * maxValue, waveform, LXColor.Blend.ADD);
-                }
-                dStripNum++;
-            }
-        }
+    public void waveOnTop(int[] colors, LXColor.Blend blend, int whichJoint) {
+        waveOnTop(colors, blend, whichJoint, true);
     }
 
-    public void renderOnStripAtT(int[] colors, float waveWidth,
-                               float maxValue, int waveform, int whichJoint, LXColor.Blend blend,
-                               int whichEffect, float fxDepth, float cosineFreq) {
-    }
-
-
-    public void waveOnTop(int[] colors, Wavetable wavetable, float width, LXColor.Blend blend, int whichJoint, int whichEffect, float fxDepth, float fxFreq) {
+    public void waveOnTop(int[] colors, LXColor.Blend blend, int whichJoint, boolean initialTail) {
         // Render on the current strip.  Compute the amount of the waveform on previous strips and the amount of
         // the waveform on the next strip. This needs to be done iteratively until there is no previous amount
         // or extra end amount. The waveform with have some width.
         float currentStripLength = dStrip.vStrip.length();
-        float waveStart = pos - width/2f;
-        float waveEnd = pos + width/2f;
+        float waveStart = pos - waveWidth/2f;
+        float waveEnd = pos + waveWidth/2f;
         float curWtPos = pos;
-        if (waveStart < 0f) {
+
+        if (!isRenderable()) return;
+        if (waveStart < 0f && initialTail) {
             float prevAmount = -waveStart;
             while (prevAmount > 0f) {
                 DStrip prevDStrip = dStrip.choosePrevStrip(whichJoint);
-                prevAmount = prevAmount - prevDStrip.vStrip.length();
-                // To render on a previous strip, move the position of the wavetable center to the right by the
-                // length of the strip.
-                curWtPos = curWtPos + prevDStrip.vStrip.length();
-                renderWavetable(colors, prevDStrip, wavetable, curWtPos, width, color, blend);
+                if (prevDStrip != null) {
+                    prevAmount = prevAmount - prevDStrip.vStrip.length();
+                    // To render on a previous strip, move the position of the wavetable center to the right by the
+                    // length of the strip.
+                    curWtPos = curWtPos + prevDStrip.vStrip.length();
+                    renderWavetable(colors, prevDStrip, curWtPos, color, blend);
 
-                if (whichEffect == 1) {
-                    VStripRender.randomGrayBaseDepth(colors, prevDStrip.vStrip, LXColor.Blend.MULTIPLY, (int)(255*(1f - fxDepth)),
-                            (int)(255*fxDepth));
-                } else if (whichEffect == 2) {
-                    VStripRender.cosine(colors, prevDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
+                    if (fx == 1) {
+                        VStripRender.randomGrayBaseDepth(colors, prevDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
+                          (int) (255 * fxDepth));
+                    } else if (fx == 2) {
+                        VStripRender.cosine(colors, prevDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
+                    }
+                } else {
+                    prevAmount = 0f;
                 }
             }
         }
 
         // Render on our current target strip.
-        renderWavetable(colors, dStrip, wavetable, pos, width, color, blend);
+        renderWavetable(colors, dStrip, pos, color, blend);
 
-        if (whichEffect == 1) {
+        if (fx == 1) {
             VStripRender.randomGrayBaseDepth(colors, dStrip.vStrip, LXColor.Blend.MULTIPLY, (int)(255*(1f - fxDepth)),
                     (int)(255*fxDepth));
-        } else if (whichEffect == 2) {
+        } else if (fx == 2) {
             VStripRender.cosine(colors, dStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
         }
 
@@ -382,52 +197,31 @@ public class Flarelet {
             curWtPos = pos;
             while (nextAmount > 0f) {
                 DStrip nextDStrip = dStrip.chooseNextStrip(whichJoint);
-                nextAmount = nextAmount - nextDStrip.vStrip.length();
-                // To render on a next strip, move the position of the wavetable center to the left by the
-                // length of the strip.
-                curWtPos = curWtPos - nextDStrip.vStrip.length();
-                renderWavetable(colors, nextDStrip, wavetable, curWtPos, width, color, blend);
-                if (whichEffect == 1) {
-                    VStripRender.randomGrayBaseDepth(colors, nextDStrip.vStrip, LXColor.Blend.MULTIPLY, (int)(255*(1f - fxDepth)),
-                            (int)(255*fxDepth));
-                } else if (whichEffect == 2) {
-                    VStripRender.cosine(colors, nextDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
+                if (nextDStrip != null) {
+                    nextAmount = nextAmount - nextDStrip.vStrip.length();
+                    // To render on a next strip, move the position of the wavetable center to the left by the
+                    // length of the strip.
+                    curWtPos = curWtPos - nextDStrip.vStrip.length();
+                    renderWavetable(colors, nextDStrip, curWtPos, color, blend);
+                    if (fx == 1) {
+                        VStripRender.randomGrayBaseDepth(colors, nextDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
+                          (int) (255 * fxDepth));
+                    } else if (fx == 2) {
+                        VStripRender.cosine(colors, nextDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
+                    }
+                } else {
+                    nextAmount = 0f;
                 }
             }
         }
     }
 
-    public void waveOnStrip(int[] colors, Wavetable wavetable, float width, int color, LXColor.Blend blend, int whichEffect, float fxDepth, float fxFreq) {
-        renderWavetable(colors, dStrip, wavetable, pos, width, color, blend);
+    public void waveOnStrip(int[] colors, int color, LXColor.Blend blend) {
+        if (!isRenderable()) return;
+        renderWavetable(colors, dStrip, pos, color, blend);
     }
 
-    public float[] renderWavetable(int[] colors, DStrip targetDStrip, Wavetable wavetable, float pos, float width,
-                                   int color, LXColor.Blend blend) {
-        return VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, width, color, blend);
-    }
-
-    /**
-     * Render the specified waveform at the specified position.  maxValue already includes the flarelet intensity override multiplied
-     * into it by this point.
-     * @param colors
-     * @param targetDStrip
-     * @param position
-     * @param width
-     * @param slope
-     * @param maxValue
-     * @param waveform
-     * @param blend
-     * @return
-     */
-    public float[] renderWaveform(int[] colors, DStrip targetDStrip, float position, float width, float slope,
-                                  float maxValue, int waveform, LXColor.Blend blend) {
-        if (waveform == WAVEFORM_TRIANGLE)
-            return VStripRender.renderTriangle(colors, targetDStrip.vStrip, position, slope, maxValue, blend, color);
-        else if (waveform == WAVEFORM_SQUARE)
-            return VStripRender.renderSquare(colors, targetDStrip.vStrip, position, width, maxValue, blend, color);
-        else if (waveform == WAVEFORM_STEPDECAY)
-            return VStripRender.renderStepDecay(colors, targetDStrip.vStrip, position, width, slope,
-                    maxValue, targetDStrip.forward, LXColor.Blend.ADD, color);
-        return new float[] {0f, 0f};
+    public float[] renderWavetable(int[] colors, DStrip targetDStrip, float pos, int color, LXColor.Blend blend) {
+        return VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, waveWidth, color, getFadeLevel(), blend);
     }
 }

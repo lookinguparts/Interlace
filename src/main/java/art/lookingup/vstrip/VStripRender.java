@@ -56,15 +56,14 @@ public class VStripRender {
     /**
      * Render a wavetable value at the specified position with the specified width.
      */
-    static public float[] renderWavetable(int colors[], VStrip vStrip, Wavetable wt, float pos, float width, int clr, LXColor.Blend blend) {
+    static public float[] renderWavetable(int colors[], VStrip vStrip, Wavetable wt, float pos, float width, int clr, float intensity, LXColor.Blend blend) {
         float[] minMax = new float[2];
-        float length = vStrip.length();
         minMax[0] = pos - width/2.0f;
         minMax[1] = pos + width/2.0f;
         for (LVPoint pt : vStrip.points) {
             //float val = wt.getSample((pt.xpos - minMax[0])/(minMax[1] - minMax[0]), width);
             float val = wt.getSample(pt.xpos - pos, width);
-            //int color = (int)(val * 255f);
+            val = val * intensity;
             colors[pt.p.index] = LXColor.blend(colors[pt.p.index],
                     LXColor.rgba((int)(((int)Colors.red(clr))*val),
                             (int)(((int)Colors.green(clr))*val),

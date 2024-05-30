@@ -37,10 +37,13 @@ public class Topology {
   static public List<VTopology> createDefaultTopologies(LX lx) {
 
     List<VTopology> topologies = new ArrayList<>();
+    List<VTopology> nullTopologies = new ArrayList<>();
+
     for (int hNum = 0; hNum < 3; hNum++) {
       // Hyperboloids are tagged with H1, H2, H3
       LXModel hyperboloid = getHyperboloid(lx, hNum + 1);
       VTopology vTop = new VTopology();
+      VTopology nullVTop = new VTopology();
       for (int stripNum = 0; stripNum < 16; stripNum++) {
         // Strips in each Hyperboloid ar tagged with strip0, strip1, ..., strip15
         LXModel stripModel = getStripNum(hyperboloid, stripNum);
@@ -51,11 +54,14 @@ public class Topology {
           lx.log("Added " + stripModel.points.length + " points to strip " + stripNum);
           vStrip.normalize();
           vTop.addStrip(vStrip);
+          nullVTop.addStrip(vStrip);
         }
       }
-      createDefaultJoints(vTop);
+      //createDefaultJoints(vTop);
       topologies.add(vTop);
+      nullTopologies.add(nullVTop);
     }
+    topologies.addAll(nullTopologies);
     lx.log("Number of topologies: " + topologies.size());
     return topologies;
   }
