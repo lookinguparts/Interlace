@@ -12,9 +12,12 @@ Visit [Chromatik.co](https://chromatik.co) to download the latest version of Chr
 
 Read the [Chromatik User Guide](https://chromatik.co/guide).
 
+Backup the standard Chromatik application jar.  Replace the Chromatik application JAR file with lib/[glxstudio-interlace-1.0.0-jar-with-dependencies.jar](lib%2Fglxstudio-interlace-1.0.0-jar-with-dependencies.jar)
+This JAR file contains the JOGL libraries necessary for shaders to work.  This should be a temporary measure while issues with the Chromatik Plugin importing process are worked out.
+On Windows for example, the Chromatik application JAR file is located at C:\Program Files\Chromatik\app\glxstudio-1.0.0-jar-with-dependencies.
+
 Download the [Interlace package JAR](https://github.com/lookinguparts/Interlace/releases) from releases.  Copy the JAR
-file to ~/Chromatik/Packages.  Once you have the package installed, you should be able to import the model.  Note that importing resources from the content package JAR is not currently working
-so you will need to download the model from the GitHub Repository and manually put it in ~/Chromatik/Models.
+file to ~/Chromatik/Packages.  Remove any pre-existing versions of the Interlace JAR that might be in that directory.  Once you have the package installed, you should be able to import the model.
 
 
 
@@ -53,10 +56,10 @@ That example calls renderPoint() for each point in the model/submodel so it can 
 
 Custom Shader Patterns
 ======================
-We will have support for custom shader patterns soon.  These will be modified vertext shaders that output ARGB values.
-If you want to play with shaders in the meantime, it should be somewhat straightforward to convert a ShaderToy shader
-to our custom vertex shader model.  Note that there won't be support for multiple input textures etc such as in ShaderToy.
-
+There is support for custom shader patterns.  These are be modified vertext shaders that output ARGB values.
+Once you install the package, you should have some examples at ~/Chromatik/VShaders/.  There currently is not
+support for textures but that will be coming soon.  In order to render on the surface of a cylinder, you should
+see the coordinate space remapping example in ShpRings.vert.  
 
 
 Modular Audio/Visual Synthesis Guide
