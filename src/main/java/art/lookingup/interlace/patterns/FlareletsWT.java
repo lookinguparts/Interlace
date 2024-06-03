@@ -1,6 +1,6 @@
-package art.lookingup.Interlace.patterns;
+package art.lookingup.interlace.patterns;
 
-import art.lookingup.Interlace.Topology;
+import art.lookingup.interlace.Topology;
 import art.lookingup.vstrip.Flarelet;
 import art.lookingup.wavetable.SineWavetable;
 import art.lookingup.wavetable.StepWavetable;

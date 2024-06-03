@@ -1,6 +1,6 @@
 package art.lookingup.util;
 
-import art.lookingup.Interlace.patterns.VShader;
+import art.lookingup.interlace.patterns.VShader;
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.util.GLBuffers;

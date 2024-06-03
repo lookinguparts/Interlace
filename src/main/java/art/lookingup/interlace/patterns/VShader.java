@@ -1,4 +1,4 @@
-package art.lookingup.Interlace.patterns;
+package art.lookingup.interlace.patterns;
 
 import heronarts.glx.GLX;
 import heronarts.glx.ui.vg.VGraphics;
@@ -358,6 +358,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       removeParameter(key);
     }
     scriptParams.clear();
+
   }
 
   public void run(double deltaMs) {

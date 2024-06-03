@@ -16,7 +16,7 @@
  * @author Mark C. Slee <mark@heronarts.com>
  */
 
-package art.lookingup.Interlace.patterns;
+package art.lookingup.interlace.patterns;
 
 import heronarts.lx.LX;
 import heronarts.lx.LXCategory;
@@ -24,7 +24,6 @@ import heronarts.lx.LXComponentName;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.model.LXModel;
 import heronarts.lx.model.LXPoint;
-import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.pattern.LXPattern;
 

@@ -1,4 +1,4 @@
-package art.lookingup.Interlace;
+package art.lookingup.interlace;
 
 import art.lookingup.vstrip.Flarelet;
 import art.lookingup.vstrip.VTopology;

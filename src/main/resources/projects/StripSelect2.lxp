@@ -905,7 +905,7 @@
               },
               {
                 "id": 9133,
-                "class": "art.lookingup.Interlace.patterns.StripSelector",
+                "class": "art.lookingup.interlace.patterns.StripSelector",
                 "internal": {
                   "modulationColor": 0,
                   "modulationControlsExpanded": true,

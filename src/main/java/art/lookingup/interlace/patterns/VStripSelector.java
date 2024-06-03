@@ -1,6 +1,6 @@
-package art.lookingup.Interlace.patterns;
+package art.lookingup.interlace.patterns;
 
-import art.lookingup.Interlace.Topology;
+import art.lookingup.interlace.Topology;
 import art.lookingup.vstrip.LVPoint;
 import art.lookingup.vstrip.VStrip;
 import art.lookingup.vstrip.VTopology;
@@ -8,13 +8,8 @@ import heronarts.lx.LX;
 import heronarts.lx.LXCategory;
 import heronarts.lx.LXComponentName;
 import heronarts.lx.color.LXColor;
-import heronarts.lx.model.LXModel;
-import heronarts.lx.model.LXPoint;
-import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.pattern.LXPattern;
-
-import java.util.List;
 
 @LXCategory("Test")
 @LXComponentName("VStripSelector")
