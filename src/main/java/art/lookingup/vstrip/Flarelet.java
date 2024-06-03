@@ -1,6 +1,7 @@
 package art.lookingup.vstrip;
 
 import art.lookingup.wavetable.Wavetable;
+import heronarts.lx.LX;
 import heronarts.lx.color.LXColor;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class Flarelet {
 
     // Time the flarelet was started.  Used for tracking fade-outs per flarelet.
     public double startTime;
-    public double fadeTime;
+    public double fadeTime; // milliseconds
 
     // Application of FX
     public int fx;
@@ -48,6 +49,8 @@ public class Flarelet {
     public Wavetable wavetable;
 
     public float waveWidth;
+
+    public LX lx;
 
 
     // When rendering position parametrically from 0 to 1, we need a pre-computed set of dStrips
@@ -172,7 +175,7 @@ public class Flarelet {
                         VStripRender.randomGrayBaseDepth(colors, prevDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
                           (int) (255 * fxDepth));
                     } else if (fx == 2) {
-                        VStripRender.cosine(colors, prevDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
+                        VStripRender.cosine2(colors, prevDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
                     }
                 } else {
                     prevAmount = 0f;
@@ -222,6 +225,7 @@ public class Flarelet {
     }
 
     public float[] renderWavetable(int[] colors, DStrip targetDStrip, float pos, int color, LXColor.Blend blend) {
+        //lx.log("Flarelet renderWavetable at pos: " + pos + " width=" + waveWidth + " color=" + color + " dStrip=" + targetDStrip.vStrip.id);
         return VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, waveWidth, color, getFadeLevel(), blend);
     }
 }

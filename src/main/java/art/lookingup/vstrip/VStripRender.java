@@ -1,5 +1,6 @@
 package art.lookingup.vstrip;
 
+import art.lookingup.util.LXUtil;
 import art.lookingup.wavetable.Wavetable;
 import heronarts.lx.color.LXColor;
 
@@ -53,6 +54,15 @@ public class VStripRender {
         }
     }
 
+    static public void cosine2(int colors[], VStrip vStrip, float head, float freq, float phase, float min, float depth, LXColor.Blend blend) {
+        for (LVPoint pt : vStrip.points) {
+            float value = ((float)Math.cos((double)freq * (head - pt.xpos) + phase) + 1.0f)/2.0f;
+            value = min + depth * value;
+            int color = (int)(value * 255f);
+            colors[pt.p.index] = LXColor.blend(colors[pt.p.index], LXColor.rgba(color, color, color, 255), blend);
+        }
+    }
+
     /**
      * Render a wavetable value at the specified position with the specified width.
      */
@@ -60,6 +70,7 @@ public class VStripRender {
         float[] minMax = new float[2];
         minMax[0] = pos - width/2.0f;
         minMax[1] = pos + width/2.0f;
+        // LXUtil.lx().log("VStripRender renderWavetable pos=" + pos + " width=" + width + " minMax[0]=" + minMax[0] + " minMax[1]=" + minMax[1] + " intensity=" + intensity);
         for (LVPoint pt : vStrip.points) {
             //float val = wt.getSample((pt.xpos - minMax[0])/(minMax[1] - minMax[0]), width);
             float val = wt.getSample(pt.xpos - pos, width);

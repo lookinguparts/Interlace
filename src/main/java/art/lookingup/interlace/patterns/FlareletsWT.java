@@ -18,7 +18,7 @@ public class FlareletsWT extends LXPattern {
 
   public CompoundParameter slope = new CompoundParameter("slope", 1.0, 0.001, 30.0);
   public CompoundParameter maxValue = new CompoundParameter("maxv", 1.0, 0.0, 1.0);
-  public CompoundParameter speed = new CompoundParameter("speed", 1.0, 0.0, 1000.0);
+  public CompoundParameter speed = new CompoundParameter("speed", 40.0, 0.0, 1000.0);
   public CompoundParameter randSpeed = new CompoundParameter("randspd", 1.0, 0.0, 5.0);
   public DiscreteParameter numFlarelets = new DiscreteParameter("flrlets", 10, 1, MAX_FLARELETS+1);
   public DiscreteParameter nextStripKnob = new DiscreteParameter("nxtStrip", 0, 0, 4);
