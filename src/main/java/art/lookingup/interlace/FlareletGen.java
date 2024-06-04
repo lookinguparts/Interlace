@@ -31,7 +31,7 @@ public class FlareletGen {
   public float waveWidth = 12f;
 
   public int color = 0xffffffff;
-  public int palette = -1;
+  public int swatch = -1;
 
   public int currentStrip = 0;
 
@@ -99,7 +99,7 @@ public class FlareletGen {
     flarelet.fxDepth = fxDepth;
     flarelet.fxFreq = fxFreq;
     flarelet.color = color;
-    flarelet.palette = palette;
+    flarelet.swatch = swatch;
     if (wave == -1) {
       lx.log("wave==-1, using default wavetable. waveWidth="  + waveWidth + " stripNum=" + stripNum);
       setWavetable(1, 128, 0, true, 1.0f);

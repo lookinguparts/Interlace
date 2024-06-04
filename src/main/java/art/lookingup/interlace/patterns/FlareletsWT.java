@@ -28,6 +28,7 @@ public class FlareletsWT extends LXPattern {
   public CompoundParameter widthKnob = new CompoundParameter("width", 0.1f, 0.0f, 120.0f).setDescription("Square wave width");
   public CompoundParameter cosineFreq = new CompoundParameter("cfreq", 1.0, 1.0, 400.0);
   public ColorParameter colorKnob = new ColorParameter("color", 0xffffffff);
+  public DiscreteParameter swatch = new DiscreteParameter("swatch", -1, -1, 20);
 
 
   Wavetable sineTable = new SineWavetable(128);
@@ -52,6 +53,7 @@ public class FlareletsWT extends LXPattern {
     addParameter("width", widthKnob);
     addParameter("cfreq", cosineFreq);
     addParameter("color", colorKnob);
+    addParameter("swatch", swatch);
     triangleTable.generateWavetable(1f, 0f);
     resetBlobs();
   }
@@ -89,6 +91,7 @@ public class FlareletsWT extends LXPattern {
       flarelets[i].fxDepth = fxDepth.getValuef();
       flarelets[i].fxFreq = cosineFreq.getValuef();
       flarelets[i].waveWidth = widthKnob.getValuef();
+      flarelets[i].swatch = swatch.getValuei();
       flarelets[i].waveOnTop(colors, LXColor.Blend.ADD, -1);
       flarelets[i].pos += speed.getValuef() * (float)deltaMs / 1000f;
       if (flarelets[i].pos > flarelets[i].dStrip.vStrip.length()) {

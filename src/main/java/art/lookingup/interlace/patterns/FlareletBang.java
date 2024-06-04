@@ -23,6 +23,7 @@ public class FlareletBang extends LXPattern {
   public DiscreteParameter waveKnob1 = new DiscreteParameter("wave1", 0, 0, 3).setDescription("Waveform type");
   public CompoundParameter widthKnob1 = new CompoundParameter("width1", 40f, 0.0f, 120.0f).setDescription("Square wave width");
   public ColorParameter colorKnob1 = new ColorParameter("color1", 0xffffffff);
+  public DiscreteParameter swatch1 = new DiscreteParameter("swatch1", -1, -1, 20);
   public CompoundParameter fadeTime1 = new CompoundParameter("fadeT1", 8.0, 0.1, 20.0).setDescription("Fade time in seconds");
 
   public CompoundParameter speed2 = new CompoundParameter("speed2", 60.0, 0.0, 1000.0);
@@ -30,6 +31,7 @@ public class FlareletBang extends LXPattern {
   public DiscreteParameter waveKnob2 = new DiscreteParameter("wave2", 0, 0, 3).setDescription("Waveform type");
   public CompoundParameter widthKnob2 = new CompoundParameter("width2", 40f, 0.0f, 120.0f).setDescription("Square wave width");
   public ColorParameter colorKnob2 = new ColorParameter("color2", 0xffffffff);
+  public DiscreteParameter swatch2 = new DiscreteParameter("swatch2", -1, -1, 20);
   public CompoundParameter fadeTime2 = new CompoundParameter("fadeT2", 8.0, 0.1, 20.0).setDescription("Fade time in seconds");
 
   public CompoundParameter speed3 = new CompoundParameter("speed3", 60.0, 0.0, 1000.0);
@@ -37,6 +39,7 @@ public class FlareletBang extends LXPattern {
   public DiscreteParameter waveKnob3 = new DiscreteParameter("wave3", 0, 0, 3).setDescription("Waveform type");
   public CompoundParameter widthKnob3 = new CompoundParameter("width3", 40f, 0.0f, 120.0f).setDescription("Square wave width");
   public ColorParameter colorKnob3 = new ColorParameter("color3", 0xffffffff);
+  public DiscreteParameter swatch3 = new DiscreteParameter("swatch3", -1, -1, 20);
   public CompoundParameter fadeTime3 = new CompoundParameter("fadeT3", 8.0, 0.1, 20.0).setDescription("Fade time in seconds");
 
   Wavetable triangleTable = new TriangleWavetable(128);
@@ -85,6 +88,7 @@ public class FlareletBang extends LXPattern {
     addParameter("wave1", waveKnob1);
     addParameter("width1", widthKnob1);
     addParameter("color1", colorKnob1);
+    addParameter("swatch1", swatch1);
 
     addParameter("fadeT2", fadeTime2);
     addParameter("speed2", speed2);
@@ -92,6 +96,7 @@ public class FlareletBang extends LXPattern {
     addParameter("wave2", waveKnob2);
     addParameter("width2", widthKnob2);
     addParameter("color2", colorKnob2);
+    addParameter("swatch2", swatch2);
 
     addParameter("fadeT3", fadeTime3);
     addParameter("speed3", speed3);
@@ -99,6 +104,7 @@ public class FlareletBang extends LXPattern {
     addParameter("wave3", waveKnob3);
     addParameter("width3", widthKnob3);
     addParameter("color3", colorKnob3);
+    addParameter("swatch3", swatch3);
 
     triangleTable.generateWavetable(1f, 0f);
     stepDecayTable.generateWavetable(1f, 0f);
@@ -144,6 +150,7 @@ public class FlareletBang extends LXPattern {
     flareletGen1.fxDepth = fxDepth1.getValuef();
     flareletGen1.waveWidth = widthKnob1.getValuef();
     flareletGen1.color = colorKnob1.getColor();
+    flareletGen1.swatch = swatch1.getValuei();
 
     flareletGen2.speed = speed2.getValuef();
     flareletGen2.fadeTime = fadeTime2.getValuef() * 1000f;
@@ -151,6 +158,7 @@ public class FlareletBang extends LXPattern {
     flareletGen2.fxDepth = fxDepth2.getValuef();
     flareletGen2.waveWidth = widthKnob2.getValuef();
     flareletGen2.color = colorKnob2.getColor();
+    flareletGen2.swatch = swatch2.getValuei();
 
     flareletGen3.speed = speed3.getValuef();
     flareletGen3.fadeTime = fadeTime3.getValuef() * 1000f;
@@ -158,6 +166,7 @@ public class FlareletBang extends LXPattern {
     flareletGen3.fxDepth = fxDepth3.getValuef();
     flareletGen3.waveWidth = widthKnob3.getValuef();
     flareletGen3.color = colorKnob3.getColor();
+    flareletGen3.swatch = swatch3.getValuei();
 
     flareletGen1.disposeExpiredFlarelets();
     flareletGen2.disposeExpiredFlarelets();

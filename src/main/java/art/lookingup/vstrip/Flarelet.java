@@ -32,7 +32,6 @@ public class Flarelet {
     // The intensity at which we simply skip the rendering.
     public float cutoutIntensity = 0.05f;
     public float flareWidth = -1.0f;
-    public float palTVal = -1f;
 
     // Time the flarelet was started.  Used for tracking fade-outs per flarelet.
     public double startTime;
@@ -43,12 +42,13 @@ public class Flarelet {
     public float fxDepth;
     public float fxFreq;
 
-    // Which palette swatch to use for the flarelet.
-    public int palette;
 
     public Wavetable wavetable;
 
     public float waveWidth;
+
+    // Which palette swatch to use for the flarelet.
+    public int swatch = -1;
 
     public LX lx;
 
@@ -226,6 +226,6 @@ public class Flarelet {
 
     public float[] renderWavetable(int[] colors, DStrip targetDStrip, float pos, int color, LXColor.Blend blend) {
         //lx.log("Flarelet renderWavetable at pos: " + pos + " width=" + waveWidth + " color=" + color + " dStrip=" + targetDStrip.vStrip.id);
-        return VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, waveWidth, color, getFadeLevel(), blend);
+        return VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, waveWidth, color, swatch, getFadeLevel(), blend);
     }
 }

@@ -1,6 +1,10 @@
 package art.lookingup.vstrip;
 
+import art.lookingup.util.EaseUtil;
+import heronarts.lx.LX;
 import heronarts.lx.color.LXColor;
+import heronarts.lx.color.LXDynamicColor;
+import heronarts.lx.color.LXSwatch;
 
 import java.awt.*;
 import java.util.Random;
@@ -84,5 +88,65 @@ public final class Colors {
 
   public static int HSBtoRGB(float[] hsb) {
     return Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
+  }
+
+  public static double quantize(double value, int steps) {
+    if (value < 0.0 || value > 1.0)
+      return value;
+
+    if (steps < 1)
+      return value;
+
+    double stepSize = 1.0 / steps;
+    double quantizedValue = Math.round(value / stepSize) * stepSize;
+    return quantizedValue;
+  }
+
+  /**
+   * Given a range from 0 to one, extract a color out of a swatch.  0 is the left most color of
+   * the palette and 1 is the rightmost.  A swatch returns a DynamicColor, which can already lerp
+   * between the base color and the next color.  So here, we just need to remap 0 to 1 so that
+   * it pulls the correct DynamicColor from the correct index of the Swatch and then re-parameterize
+   * our 0 to 1 value.  For example with 4 colors, 0.125 is halfway between the first two colors.
+   * With 4 colors, we have 0.250 per color. So colorIndexRange = 1.0 / NumSwatchColors;
+   * (int)(0.125 / colorIndexRange) -> 0, so we use index 0 on the swatch.  Now to reparameterize
+   * we just divide 0.125/0.250 = 0.5;  So we can just LXColor.lerp between DynamicColor.primary and DynamicColor.secondary;
+   */
+  static public int getParameterizedPaletteColor(LX lx, int swatchIndex, float t, EaseUtil ease) {
+    if (swatchIndex >= lx.engine.palette.swatches.size())
+      return 0;
+    LXSwatch swatch = lx.engine.palette.swatches.get(swatchIndex);
+    if (swatch.colors.size() == 0)
+      return LXColor.BLACK;
+    if (swatch.colors.size() == 1)
+      return swatch.getColor(0).primary.getColor();
+    float colorIndexRange = 1.0f / (float)((swatch.colors.size()-1));
+    int colorIndex = (int) (t / colorIndexRange);
+    if (t < 0f)
+      t = 0f;
+
+    int nextIndex = colorIndex + 1;
+    if (nextIndex >= swatch.colors.size())
+      nextIndex -= 1;
+    float distanceInRange = (t - colorIndex * colorIndexRange)/colorIndexRange;
+    if (ease!= null) distanceInRange = ease.ease(distanceInRange);
+    LXDynamicColor color = swatch.getColor(colorIndex);
+    LXDynamicColor nextColor = swatch.getColor(nextIndex);
+    return LXColor.lerp(color.primary.getColor(), nextColor.primary.getColor(), distanceInRange);
+  }
+
+  static public int getQuantizedPaletteColor(LX lx, int swatchIndex, float t, EaseUtil ease) {
+    if (swatchIndex >= lx.engine.palette.swatches.size())
+      return 0;
+    LXSwatch swatch = lx.engine.palette.swatches.get(swatchIndex);
+    if (swatch.colors.size() == 0)
+      return LXColor.BLACK;
+    if (swatch.colors.size() == 1)
+      return swatch.getColor(0).primary.getColor();
+    t = (float)quantize(t, swatch.colors.size());
+    float stepSize = 1.0f / (float)swatch.colors.size();
+    int colorIndex = (int)(t / stepSize);
+    LXDynamicColor color = swatch.getColor(colorIndex);
+    return color.getColor();
   }
 }
