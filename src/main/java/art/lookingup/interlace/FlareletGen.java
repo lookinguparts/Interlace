@@ -40,11 +40,53 @@ public class FlareletGen {
 
   public Wavetable wavetable;
 
+  static public Wavetable[] sharedWavetables = new Wavetable[6];
+  static public boolean wavetablesBuilt = false;
+
+
   public LX lx;
 
   public FlareletGen(LX lx, VTopology vTop) {
     this.vTop = vTop;
     this.lx = lx;
+    int samples = 128;
+    buildWavetables(samples, samples/2, 1.0f, true);
+  }
+
+  /**
+   * Since wavetables are static, we should prebuild them and then just share the instances here.  This will be more
+   * efficient with large numbers of flarelets.
+   */
+  static public void buildWavetables(int samples, int width, float pscale, boolean forward) {
+    if (wavetablesBuilt) {
+      return;
+    }
+    wavetablesBuilt = true;
+    Wavetable wavetable;
+
+    wavetable = new SineWavetable(samples);
+    wavetable.generateWavetable(1f, 0f);
+    sharedWavetables[0] = wavetable;
+
+    wavetable = new TriangleWavetable(samples);
+    wavetable.generateWavetable(1f, 0f);
+    sharedWavetables[1] = wavetable;
+
+    wavetable = new StepWavetable(samples);
+    wavetable.generateWavetable(1f, 0f);
+    sharedWavetables[2] = wavetable;
+
+    wavetable = new StepDecayWavetable(samples, width, samples - width, forward);
+    wavetable.generateWavetable(1f, 0f);
+    sharedWavetables[3] = wavetable;
+
+    wavetable = new RandomWavetable(samples);
+    wavetable.generateWavetable(1f, 0f);
+    sharedWavetables[4] = wavetable;
+
+    wavetable = new PerlinWavetable(samples, 1, pscale);
+    wavetable.generateWavetable(1f, 0f);
+    sharedWavetables[5] = wavetable;
   }
 
   /**
@@ -101,11 +143,13 @@ public class FlareletGen {
     flarelet.color = color;
     flarelet.swatch = swatch;
     if (wave == -1) {
-      lx.log("wave==-1, using default wavetable. waveWidth="  + waveWidth + " stripNum=" + stripNum);
-      setWavetable(1, 128, 0, true, 1.0f);
+      //lx.log("wave==-1, using default wavetable. waveWidth="  + waveWidth + " stripNum=" + stripNum);
+      //setWavetable(1, 128, 0, true, 1.0f);
+      setWavetable(1);
     } else {
-      lx.log("wave=" + wave + " waveWidth=" + waveWidth);
-      setWavetable(wave, 128, 64, true, 1.0f);
+      //lx.log("wave=" + wave + " waveWidth=" + waveWidth);
+      //setWavetable(wave, 128, 64, true, 1.0f);
+      setWavetable(wave);
     }
     flarelet.wavetable = wavetable;
     flarelet.waveWidth = waveWidth;
@@ -128,6 +172,16 @@ public class FlareletGen {
         it.remove();
       }
     }
+  }
+
+  /**
+   * Sets the current wavetable based on the wave parameter and selects from the pre-built wavetables.  This is
+   * much more efficient for many flarelets.
+   * @param wave
+   */
+  public void setWavetable(int wave) {
+    wavetable = sharedWavetables[wave];
+    this.wave = wave;
   }
 
   /**
