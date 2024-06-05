@@ -57,9 +57,10 @@ That example calls renderPoint() for each point in the model/submodel so it can 
 Custom Shader Patterns
 ======================
 There is support for custom shader patterns.  These are modified vertex shaders that output RGB values.
-Once you install the package, you should have some examples at ~/Chromatik/VShaders/.  There currently is not
+After you install the package, you should create the directory ~/Chromatik/VShaders/ and place the contents of the repository's VShader/ directory in it.  There currently is not
 support for textures but that will be coming soon.  In order to render on the surface of a cylinder, you should
-see the coordinate space remapping example in ShpRings.vert.  
+see the coordinate space remapping example in ShpRings.vert.  The shaders support an #include <funcs.vert> directive for sharing
+common blocks of code.
 
 
 Modular Audio/Visual Synthesis Guide
