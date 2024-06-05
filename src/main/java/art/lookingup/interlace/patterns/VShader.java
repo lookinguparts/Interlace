@@ -1,5 +1,6 @@
 package art.lookingup.interlace.patterns;
 
+import art.lookingup.util.LXUtil;
 import heronarts.glx.GLX;
 import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.model.LXPoint;
@@ -52,8 +53,6 @@ import static com.jogamp.opengl.GL2ES3.*;
 public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   private static final Logger logger = Logger.getLogger(VShader.class.getName());
   public GL3 gl;
-
-  //org.lwjgl.opengl.EXTTransformFeedback transformFeedback;
 
   StringParameter scriptName = new StringParameter("scriptName", "default");
   CompoundParameter speed = new CompoundParameter("speed", 1f, 0f, 20f);
@@ -145,22 +144,9 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       zMax = Math.max(zMax, p.z);
     }
     for (int i = 0; i < points.length; i++) {
-
       ledPositions[i * 3] = (points[i].x - xMin)/(xMax - xMin);
       ledPositions[i * 3 + 1] = (points[i].y - yMin)/(yMax - yMin);
       ledPositions[i * 3 + 2] = (points[i].z - zMin)/(zMax - zMin);
-
-       /*
-      ledPositions[i * 3] = points[i].xn;
-      ledPositions[i * 3 + 1] = points[i].yn;
-      ledPositions[i * 3 + 2] = points[i].zn;
-
-        */
-/*
-      ledPositions[i * 3] = points[i].x;
-      ledPositions[i * 3 + 1] = points[i].y;
-      ledPositions[i * 3 + 2] = points[i].z;
-*/
     }
   }
 
@@ -200,78 +186,95 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
 
   public void reloadShader(String shaderName, boolean clearSliders) {
-
     glDrawable.getContext().makeCurrent();
-
     if (shaderProgramId != -1)
       gl.glDeleteProgram(shaderProgramId);
 
     if (clearSliders) clearSliders();
-
-    String paletteDefs = GLUtil.loadPalettes();
-
-    String shaderDir = "shaders";
-    shaderDir = lx.getMediaPath() + "/VShader";
-    lx.log("ShaderDir: " + shaderDir);
-    ShaderCode vertShader = ShaderCode.create(gl, GL_VERTEX_SHADER, this.getClass(), shaderDir,
-      null, shaderName, "vert", null, true);
-    vertShader.insertShaderSource(0, "INSERT-PALETTES", 0, paletteDefs);
-    CharSequence[][] source = vertShader.shaderSource();
     newSliderKeys.clear();
     removeSliderKeys.clear();
-    for (int i = 0; i < source.length; i++) {
-      for (int j = 0; j < source[i].length; j++) {
-        int endOfComment = source[i][j].toString().indexOf("*/");
-        int startOfComment = source[i][j].toString().indexOf("/*");
-        String jsonDef = source[i][j].toString().substring(startOfComment + 2, endOfComment);
-        //logger.info("JsonDef: " + jsonDef);
-        isfObj = (JsonObject)new JsonParser().parse(jsonDef);
-        JsonArray inputs = isfObj.getAsJsonArray("INPUTS");
 
-        for (int k = 0; k < inputs.size(); k++) {
-          JsonObject input = (JsonObject)inputs.get(k);
-          String pName = input.get("NAME").getAsString();
-          String pType = input.get("TYPE").getAsString(); // must be float for now
-          float pDefault = input.get("DEFAULT").getAsFloat();
-          float pMin = input.get("MIN").getAsFloat();
-          float pMax =  input.get("MAX").getAsFloat();
-          // Add the parameter
-          if (clearSliders || (!clearSliders && !scriptParams.containsKey(pName))) {
-            CompoundParameter cp = new CompoundParameter(pName, pDefault, pMin, pMax);
-            scriptParams.put(pName, cp);
-            addParameter(pName, cp);
-          }
-          newSliderKeys.add(pName);
-          // How to remove ones we haven't seen?
-        }
-        if (!clearSliders) {
-          for (String key : scriptParams.keySet()) {
-            if (!newSliderKeys.contains(key)) {
-              removeSliderKeys.add(key);
-            }
-          }
-          for (String key : removeSliderKeys) {
-            removeParameter(key);
-            scriptParams.remove(key);
-          }
+    shaderProgramId = gl.glCreateProgram();
+    String shaderSource = "";
+
+    try {
+      shaderSource = GLUtil.loadShader(GLUtil.shaderDir(lx), shaderName + ".vert");
+    } catch (Exception ex) {
+      LX.log("Error loading shader: " + ex.getMessage());
+    }
+
+    //LX.log("Line: " + shaderSource);
+    int endOfComment = shaderSource.indexOf("*/");
+    int startOfComment = shaderSource.indexOf("/*");
+    String jsonDef = shaderSource.substring(startOfComment + 2, endOfComment);
+    //LX.log("JsonDef: " + jsonDef);
+    isfObj = (JsonObject)new JsonParser().parse(jsonDef);
+    JsonArray inputs = isfObj.getAsJsonArray("INPUTS");
+
+    for (int k = 0; k < inputs.size(); k++) {
+      JsonObject input = (JsonObject)inputs.get(k);
+      String pName = input.get("NAME").getAsString();
+      String pType = input.get("TYPE").getAsString(); // must be float for now
+      float pDefault = input.get("DEFAULT").getAsFloat();
+      float pMin = input.get("MIN").getAsFloat();
+      float pMax =  input.get("MAX").getAsFloat();
+      // Add the parameter
+      if (clearSliders || (!clearSliders && !scriptParams.containsKey(pName))) {
+        CompoundParameter cp = new CompoundParameter(pName, pDefault, pMin, pMax);
+        scriptParams.put(pName, cp);
+        addParameter(pName, cp);
+        // LX.log("Found param: " + pName);
+      }
+      newSliderKeys.add(pName);
+      // How to remove ones we haven't seen?
+    }
+    if (!clearSliders) {
+      for (String key : scriptParams.keySet()) {
+        if (!newSliderKeys.contains(key)) {
+          removeSliderKeys.add(key);
         }
       }
+      for (String key : removeSliderKeys) {
+        removeParameter(key);
+        scriptParams.remove(key);
+      }
     }
-    ShaderProgram shaderProgram = new ShaderProgram();
-    shaderProgram.add(vertShader);
-    shaderProgram.init(gl);
-    shaderProgramId = shaderProgram.program();
 
+    int shaderId = -1;
+    try {
+      shaderId = GLUtil.createShader(gl, shaderProgramId, shaderSource, GL_VERTEX_SHADER);
+    } catch (Exception ex) {
+      LX.log("Error creating shader: " + ex.getMessage());
+    }
+
+    // At this point, our only dependency is the integer shaderProgramId.
     gl.glTransformFeedbackVaryings(shaderProgramId, 1, new String[]{"tPosition"}, GL_INTERLEAVED_ATTRIBS);
-    shaderProgram.link(gl, System.err);
+    GLUtil.link(gl, shaderProgramId);
+
+    /*
+    Once the program is linked we can free the shaderId resources?
+    https://stackoverflow.com/questions/9113154/proper-way-to-delete-glsl-shader
+    Maybe there are some driver-specific surprises according to above?
+
+    int vertexShaderId =
+          createShader(gl4, programId, getVertexShaderTemplate(), GL4.GL_VERTEX_SHADER);
+      int fragmentShaderId = createShader(gl4, programId, shaderBody, GL4.GL_FRAGMENT_SHADER);
+      link(gl4, programId);
+
+      // free native resources after link
+      gl4.glDetachShader(programId, fragmentShaderId);
+      gl4.glDetachShader(programId, vertexShaderId);
+      gl4.glDeleteShader(fragmentShaderId);
+      gl4.glDeleteShader(vertexShaderId);
+     */
 
     // Now, find uniform locations.
     fTimeLoc = gl.glGetUniformLocation(shaderProgramId, "fTime");
-    lx.log("Found fTimeLoc at: " + fTimeLoc);
+    LX.log("Found fTimeLoc at: " + fTimeLoc);
     for (String scriptParam : scriptParams.keySet()) {
       int paramLoc = gl.glGetUniformLocation(shaderProgramId, scriptParam);
       paramLocations.put(scriptParam, paramLoc);
-      //logger.info("Found " + scriptParam + " at: " + paramLoc);
+      //LX.log("Found " + scriptParam + " at: " + paramLoc);
     }
     glDrawable.getContext().release();
     // Notify the UI
@@ -342,7 +345,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   @Override
   public void onParameterChanged(LXParameter p) {
     if (p == this.scriptName) {
-      lx.log("scriptName parameter changed!");
+      // LX.log("scriptName parameter changed!");
       reloadShader(((StringParameter)p).getString());
     }
   }
@@ -410,7 +413,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
             "Open Vertex Shader",
             "Vertex Shader",
             new String[] { "vert" },
-            lx.getMediaFile(LX.Media.PROJECTS, "default.vert").toString(),
+            GLUtil.shaderDir(lx) + File.separator,
             (path) -> { onOpen(new File(path)); }
           );
         }
@@ -482,10 +485,10 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     if (openFile != null) {
       LX lx = getLX();
       String baseFilename = openFile.getName().substring(0, openFile.getName().indexOf('.'));
-      lx.log("Loading: " + baseFilename);
+      LX.log("Loading: " + baseFilename);
 
       lx.engine.addTask(() -> {
-        lx.log("Running script name setting task");
+        LX.log("Running script name setting task");
         lx.command.perform(new LXCommand.Parameter.SetString(
           scriptName,
           baseFilename

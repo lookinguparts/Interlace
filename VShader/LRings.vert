@@ -1,0 +1,134 @@
+/*{
+	"DESCRIPTION": "LRings",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"VERTEX SDF"
+	],
+	"INPUTS": [
+         {
+            "NAME": "s1",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": -1.1,
+            "MAX": 1.1
+         },
+         {
+            "NAME": "s2",
+            "TYPE": "float",
+            "DEFAULT": 0.1,
+            "MIN": -1.1,
+            "MAX": 1.1
+         },
+         {
+            "NAME": "radius",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": -0.25,
+            "MAX": 2.0
+         },
+         {
+            "NAME": "thick",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": -1.1,
+            "MAX": 1.1
+         },
+         {
+            "NAME": "zoom",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": -4.0,
+            "MAX": 4.0
+         },
+          {
+            "NAME": "brt",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": .1,
+            "MAX": 20.
+         },
+         {
+            "NAME": "palval",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 9.9
+         },
+          {
+            "NAME": "pald",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 10.0
+         },
+          {
+            "NAME": "pw",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 5.0
+         }
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float s1;
+uniform float s2;
+uniform float radius;
+uniform float thick;
+uniform float zoom;
+uniform float brt;
+uniform float palval;
+uniform float pald;
+uniform float pw;
+
+layout(location = 0) in vec3 position;
+out vec3 tPosition;
+
+#include <palettes.vert>
+#include <sdf2d.vert>
+#include <const.vert>
+#include <uvwrap.vert>
+
+
+float ring(vec2 ruv3) {
+    float d = HexDist(ruv3); //length(ruv3);
+    d -= radius;
+
+    d = abs(d)-thick;
+    d = smoothstep(s1, s2, d);
+    d = pow(brt*0.01/d, 1.3);
+    return clamp(d, 0., 1.);
+}
+
+mat2 Rot(float a) {
+    float s=sin(a), c=cos(a);
+    return mat2(c, -s, s, c);
+}
+
+void main(){
+    vec2 uv = uvwrap(position);
+    uv = uv - 0.5;
+    vec3 color = vec3(1., 1., 1.);
+
+    float pal_d = length(uv) * pald;
+
+    vec2 ruv = uv;
+    ruv *= zoom;
+
+    float bright = 0.;
+    for (float i = 0.; i < 6.; i++) {
+        vec2 iruv = Rot(i * PI/3.) * ruv;
+        float d = ring(iruv + vec2(0., .5));
+        bright += d;
+    }
+
+    bright = pow(bright, pw);
+
+    color *= vec3(clamp(paletteN(pal_d + fTime * .5, palval)*bright, 0., 1.));
+
+    tPosition = color;
+}
