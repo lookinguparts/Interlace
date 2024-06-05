@@ -227,6 +227,17 @@ public class GLUtil {
     vsGLCtx.gl.getContext().release();
   }
 
+  //
+  // The #include support is based on Titanic's End shader code.  I figured it would be better to be
+  // compatible with whatever they are doing syntax-wise.  One slight difference is that we are using OpenGL 3
+  // so that we can stay compatible with older Raspberry Pi's but the interface is the same for compiling shaders
+  // and linking programs so there is effectively no difference.
+  // TODO(tracy): I need to add some intermediate stateful static inner class here to properly track line numbers
+  // across includes.  Also, failure modes should be more smoothed out.
+  // https://github.com/titanicsend/LXStudio-TE
+  //
+  //
+
   static public String loadFile(String shaderDir, String shader) {
     try {
       return new String(Files.readAllBytes(Paths.get(shaderDir + File.separator + shader)));
