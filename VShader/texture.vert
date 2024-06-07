@@ -34,6 +34,7 @@ uniform sampler2D textureSampler;
 layout(location = 0) in vec3 position;
 out vec3 tPosition;
 
+#include <const.vert>
 #include <uvwrap.vert>
 
 void main(){

@@ -14,6 +14,7 @@ import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.LX;
 import heronarts.lx.LXCategory;
 import heronarts.lx.LXComponent;
+import heronarts.lx.audio.GraphicMeter;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.command.LXCommand;
 import heronarts.lx.model.LXPoint;
@@ -33,6 +34,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
@@ -67,6 +69,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
   private UIButton texOpenButton;
   com.jogamp.opengl.util.texture.Texture glTexture;
   public int textureLoc = -3;
+  public int fftTextureLoc = -3;
 
   public final int TEXTURE_SIZE = 512;
 
@@ -109,12 +112,35 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
 
   float[] ledPositions;
 
+  int[] audioTextureHandle = {0};
+  byte[] fft = new byte[1024];
+
   protected void updateLedPositions() {
     for (int i = 0; i < model.points.length; i++) {
       ledPositions[i * 3] = model.points[i].xn;
       ledPositions[i * 3 + 1] = model.points[i].yn;
       ledPositions[i * 3 + 2] = model.points[i].zn;
     }
+  }
+
+  protected void updateAudioTexture() {
+    // Create Audio FFT texture
+    if (fftTextureLoc < 0 || audioTextureHandle[0] == 0) {
+      return;
+    }
+    //LX.log("Updating audio texture");
+    GraphicMeter eq = lx.engine.audio.meter;
+    for (int i = 0; i < 1024; i++) {
+      int bandVal = (int)(eq.getBandf(i%16) * 255.0);
+      fft[i++] = (byte)(bandVal);
+    }
+    ByteBuffer fftBuf = ByteBuffer.wrap(fft);
+    gl.glBindTexture(GL_TEXTURE_2D, audioTextureHandle[0]);
+    // tex0.resize(context, GL2.GL_R8, 512, 2, GL2.GL_RED, GL2.GL_UNSIGNED_BYTE,
+    //        GL2.GL_LINEAR, GL2.GL_MIRRORED_REPEAT, 1, 1, fftBuf);
+
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 512, 2, 0, GL_RED, GL_UNSIGNED_BYTE,
+      fftBuf);
   }
 
   /**
@@ -142,10 +168,18 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
       glTexture.bind(gl);
       gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
       gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
-      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
-      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_MIRRORED_REPEAT);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_MIRRORED_REPEAT);
     }
     gl.glGenBuffers(Buffer.MAX, bufferNames);
+    // Set up audio texture.
+    gl.glGenTextures(1, audioTextureHandle, 0);
+    gl.glBindTexture(GL_TEXTURE_2D, audioTextureHandle[0]);
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_MIRRORED_REPEAT);
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_MIRRORED_REPEAT);
+
     VShader.glDrawable.getContext().release();
 
     reloadShader(scriptName.getString());
@@ -254,6 +288,10 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
       textureLoc = gl.glGetUniformLocation(shaderProgramId, "textureSampler");
       LX.log("Found textureSampler at location: " + textureLoc);
     }
+    if (audioTextureHandle[0] != 0) {
+      fftTextureLoc = gl.glGetUniformLocation(shaderProgramId, "audioTexture");
+      LX.log("Found audioTexture at location: " + fftTextureLoc);
+    }
     VShader.glDrawable.getContext().release();
     // Notify the UI
     onReload.bang();
@@ -312,6 +350,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
   public void glRun(double deltaMs) {
     totalTime += deltaMs/1000.0;
     VShader.glDrawable.getContext().makeCurrent();
+    updateAudioTexture();
     gl.glBindBuffer(GL_ARRAY_BUFFER, bufferNames.get(Buffer.VERTEX));
     gl.glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * Float.BYTES, vertexBuffer, GL_STATIC_DRAW);
     int inputAttrib = gl.glGetAttribLocation(shaderProgramId, "position");
@@ -334,6 +373,11 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
       glTexture.enable(gl);
       glTexture.bind(gl);
       gl.glUniform1i(textureLoc, 0); // 0 is the texture unit
+    }
+    if (audioTextureHandle[0] != 0) {
+      gl.glActiveTexture(GL_TEXTURE1);
+      gl.glBindTexture(GL_TEXTURE_2D, audioTextureHandle[0]);
+      gl.glUniform1i(fftTextureLoc, 1);
     }
 
     gl.glBeginTransformFeedback(GL_POINTS);
