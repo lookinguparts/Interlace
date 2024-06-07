@@ -1,20 +1,24 @@
 package art.lookingup.interlace.patterns;
 
-import heronarts.glx.GLX;
-import heronarts.glx.ui.vg.VGraphics;
-import heronarts.lx.model.LXPoint;
 import art.lookingup.util.EaseUtil;
 import art.lookingup.util.GLUtil;
+import art.lookingup.util.JavaUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.util.GLBuffers;
+import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+import heronarts.glx.GLX;
+import heronarts.glx.ui.component.UIButton;
+import heronarts.glx.ui.component.UILabel;
+import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.LX;
 import heronarts.lx.LXCategory;
 import heronarts.lx.LXComponent;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.command.LXCommand;
+import heronarts.lx.model.LXPoint;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.LXParameter;
 import heronarts.lx.parameter.MutableParameter;
@@ -25,16 +29,16 @@ import heronarts.lx.studio.ui.device.UIDevice;
 import heronarts.lx.studio.ui.device.UIDeviceControls;
 import heronarts.lx.utils.LXUtils;
 import heronarts.glx.ui.UI2dContainer;
-import heronarts.glx.ui.component.UIButton;
-import heronarts.glx.ui.component.UILabel;
 import heronarts.glx.ui.component.UISlider;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
@@ -47,11 +51,11 @@ import static com.jogamp.opengl.GL2ES3.*;
  * First attempt at using vertex shaders for volumetric rendering.
  */
 @LXCategory(LXCategory.FORM)
-public class VShader extends LXPattern implements UIDeviceControls<VShader> {
-  private static final Logger logger = Logger.getLogger(VShader.class.getName());
+public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex> {
   public GL3 gl;
 
-  StringParameter scriptName = new StringParameter("scriptName", "default");
+  StringParameter scriptName = new StringParameter("scriptName", "texture");
+  StringParameter texName = new StringParameter("tName", "fractal5");
   CompoundParameter speed = new CompoundParameter("speed", 1f, 0f, 20f);
 
   // These parameters are loaded from the ISF Json declaration at the top of the shader
@@ -62,41 +66,26 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   public final MutableParameter onReload = new MutableParameter("Reload");
   public final StringParameter error = new StringParameter("Error", null);
   private UIButton openButton;
+  private UIButton texOpenButton;
+  com.jogamp.opengl.util.texture.Texture glTexture;
+  public int textureLoc = -3;
 
-  public static GLOffscreenAutoDrawable glDrawable;
+  public final int TEXTURE_SIZE = 512;
 
-
-  public VShader(LX lx) {
+  public VShaderTex(LX lx) {
     super(lx);
 
-    initializeGLContext();
     addParameter("scriptName", scriptName);
+    addParameter("texName", texName);
     addParameter("speed", speed);
-    glInit(lx);
-  }
 
-  /**
-   * NOTE(tracy): These need to be called only after the the UI is up and running otherwise we are causing GL Context
-   * issues with threads.  We need top defer all initialization until the first run time.  This is going to be
-   * annoying.
-   */
-  static public void initializeGLContext() {
-    logger.info("Calling initializeGLContext");
-    if (glDrawable == null) {
-      GLProfile glp = GLProfile.get(GLProfile.GL4);
-      GLCapabilities caps = new GLCapabilities(glp);
-      caps.setHardwareAccelerated(true);
-      caps.setDoubleBuffered(false);
-      // set bit count for all channels to get alpha to work correctly
-      caps.setAlphaBits(8);
-      caps.setRedBits(8);
-      caps.setBlueBits(8);
-      caps.setGreenBits(8);
-      caps.setOnscreen(false);
-      GLDrawableFactory factory = GLDrawableFactory.getFactory(glp);
-      glDrawable = factory.createOffscreenAutoDrawable(factory.getDefaultDevice(), caps, new DefaultGLCapabilitiesChooser(),512,512);
-      glDrawable.display();
-    }
+
+    VShader.initializeGLContext();
+
+    texName.setValue("fractal5");
+    reloadTexture(texName.getString());
+
+    glInit();
   }
 
   private interface Buffer {
@@ -153,13 +142,13 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
    * Also, reserve the OpenGL buffer IDs.
    * Load the shader, bind the output that feeds into the transform feedback buffer, and link the shader.
    */
-  public void glInit(LX lx) {
+  public void glInit() {
     LXPoint[] points = model.points;
     ledPositions = new float[points.length * 3];
     updateLedPositions();
 
-    glDrawable.getContext().makeCurrent();
-    gl = glDrawable.getGL().getGL3();
+    VShader.glDrawable.getContext().makeCurrent();
+    gl = VShader.glDrawable.getGL().getGL3();
     vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
 
     // This is just a destination, make it large enough to accept all the vertex data.  The vertex
@@ -167,9 +156,16 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     // geometry shader and filter there.  You will also need to carry along the lxpoint index with
     // the vertex data in that scenario to match it up after the transform feedback.
     tfbBuffer = GLBuffers.newDirectFloatBuffer(vertexBuffer.capacity());
-
+    if (glTexture != null) {
+      // Set texture parameters for sampling
+      glTexture.bind(gl);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+    }
     gl.glGenBuffers(Buffer.MAX, bufferNames);
-    glDrawable.getContext().release();
+    VShader.glDrawable.getContext().release();
 
     reloadShader(scriptName.getString());
   }
@@ -183,7 +179,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
 
   public void reloadShader(String shaderName, boolean clearSliders) {
-    glDrawable.getContext().makeCurrent();
+    VShader.glDrawable.getContext().makeCurrent();
     if (shaderProgramId != -1)
       gl.glDeleteProgram(shaderProgramId);
 
@@ -273,10 +269,45 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       paramLocations.put(scriptParam, paramLoc);
       //LX.log("Found " + scriptParam + " at: " + paramLoc);
     }
-    glDrawable.getContext().release();
+    if (glTexture != null) {
+      textureLoc = gl.glGetUniformLocation(shaderProgramId, "textureSampler");
+      LX.log("Found textureSampler at location: " + textureLoc);
+    }
+    VShader.glDrawable.getContext().release();
     // Notify the UI
     onReload.bang();
   }
+
+  public void reloadTexture(String textureName) {
+    LX.log("Loading texture: " + textureName);
+    String texturesDir =  GLUtil.shaderDir(lx) + File.separator + "textures" + File.separator;
+    BufferedImage textureImage = null;
+    try {
+      textureImage = ImageIO.read(new File(texturesDir + textureName + ".png"));
+    } catch (IOException ioex) {
+      LX.log("Error loading texture: " + textureName + " : " + ioex.getMessage());
+    }
+    /*
+    if (textureImage != null && (textureImage.getWidth() != TEXTURE_SIZE || textureImage.getHeight() != TEXTURE_SIZE)) {
+      textureImage = JavaUtil.resize(textureImage, TEXTURE_SIZE, TEXTURE_SIZE);
+    }
+     */
+
+    VShader.glDrawable.getContext().makeCurrent();
+    if (textureImage != null)
+      glTexture = AWTTextureIO.newTexture(VShader.glDrawable.getGLProfile(), textureImage, false);
+
+    if (glTexture != null && gl != null) {
+      // Set texture parameters for sampling
+      glTexture.bind(gl);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
+      gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+    }
+    VShader.glDrawable.getContext().release();
+  }
+
 
   @Override
   public void load(LX lx, JsonObject obj) {
@@ -299,15 +330,8 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
    */
   public void glRun(double deltaMs) {
     totalTime += deltaMs/1000.0;
-    glDrawable.getContext().makeCurrent();
-    updateLedPositions();
-    vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
+    VShader.glDrawable.getContext().makeCurrent();
     gl.glBindBuffer(GL_ARRAY_BUFFER, bufferNames.get(Buffer.VERTEX));
-    // TODO(tracy): Reload vertexBuffer data from xn, yn, zn here for moving points.
-
-    //vertexBuffer.clear();
-    //vertexBuffer.put(ledPositions, 0, ledPositions.length);
-    //vertexBuffer.put(ledPositions);
     gl.glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * Float.BYTES, vertexBuffer, GL_STATIC_DRAW);
     int inputAttrib = gl.glGetAttribLocation(shaderProgramId, "position");
     gl.glEnableVertexAttribArray(inputAttrib);
@@ -324,6 +348,13 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     for (String paramName : scriptParams.keySet()) {
       gl.glUniform1f(paramLocations.get(paramName), scriptParams.get(paramName).getValuef());
     }
+    if (glTexture != null) {
+      //logger.info("Attempting to bind the textureLoc to slot 0.");
+      glTexture.enable(gl);
+      glTexture.bind(gl);
+      gl.glUniform1i(textureLoc, 0); // 0 is the texture unit
+    }
+
     gl.glBeginTransformFeedback(GL_POINTS);
     {
       gl.glDrawArrays(GL_POINTS, 0, model.points.length);
@@ -336,14 +367,24 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     gl.glUseProgram(0);
     gl.glDisable(GL_RASTERIZER_DISCARD);
 
-    glDrawable.getContext().release();
+    // For manually checking the first few output values in the transform feedback buffer.
+    for (int i = 0; i < 21; i++) {
+      //System.out.print(tfbBuffer.get(i) + ",");
+    }
+    //System.out.println();
+
+    VShader.glDrawable.getContext().release();
   }
 
   @Override
   public void onParameterChanged(LXParameter p) {
     if (p == this.scriptName) {
-      // LX.log("scriptName parameter changed!");
+      LX.log("scriptName parameter changed!");
       reloadShader(((StringParameter)p).getString());
+    }
+    if (p == this.texName) {
+      LX.log("texture parameter changed!");
+      reloadTexture(((StringParameter)p).getString());
     }
   }
 
@@ -358,7 +399,6 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       removeParameter(key);
     }
     scriptParams.clear();
-
   }
 
   public void run(double deltaMs) {
@@ -388,7 +428,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   }
 
   @Override
-  public void buildDeviceControls(LXStudio.UI ui, UIDevice uiDevice, VShader pattern) {
+  public void buildDeviceControls(LXStudio.UI ui, UIDevice uiDevice, VShaderTex pattern) {
     final UILabel fileLabel = (UILabel)
       new UILabel(0, 0, 120, 18)
         .setLabel(pattern.scriptName.getString())
@@ -422,19 +462,51 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       .addToContainer(uiDevice);
 
 
-    final UIButton resetButton = (UIButton) new UIButton(140, 0, 18, 18) {
+    // Texture selection:
+    final UILabel texFileLabel = (UILabel)
+      new UILabel(160, 0, 120, 18)
+        .setLabel(pattern.texName.getString())
+        .setBackgroundColor(LXColor.BLACK)
+        .setBorderRounding(4)
+        .setTextAlignment(VGraphics.Align.CENTER, VGraphics.Align.MIDDLE)
+        .setTextOffset(0, -1)
+        .addToContainer(uiDevice);
+
+    pattern.texName.addListener(p -> {
+      texFileLabel.setLabel(pattern.texName.getString());
+    });
+
+    this.texOpenButton = (UIButton) new UIButton(280, 0, 18, 18) {
+      @Override
+      public void onToggle(boolean on) {
+        ((GLX)lx).showOpenFileDialog(
+          "Open Texture",
+          "PNG Texture",
+          new String[] { "png" },
+          GLUtil.shaderDir(lx) + File.separator + "textures" + File.separator,
+          (path) -> { onOpenTexture(new File(path));}
+        );
+      }
+    }
+      .setIcon(ui.theme.iconOpen)
+      .setMomentary(true)
+      .setDescription("Open Texture")
+      .addToContainer(uiDevice);
+
+
+    final UIButton texResetButton = (UIButton) new UIButton(298, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         if (on) {
           lx.engine.addTask(() -> {
-            logger.info("Reloading script");
-            reloadShader(scriptName.getString(), false);
+            LX.log("Reloading texture");
+            reloadTexture(texName.getString());
           });
         }
       }
     }.setIcon(ui.theme.iconLoad)
       .setMomentary(true)
-      .setDescription("Reload shader")
+      .setDescription("Reload texture")
       .addToContainer(uiDevice);
 
 
@@ -459,7 +531,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
         new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, slider)
           .addToContainer(sliders);
       }
-      float contentWidth = LXUtils.maxf(140, sliders.getContentWidth());
+      float contentWidth = LXUtils.maxf(320, sliders.getContentWidth());
       uiDevice.setContentWidth(contentWidth);
       //resetButton.setX(contentWidth - resetButton.getWidth());
       //this.openButton.setX(resetButton.getX() - 2 - this.openButton.getWidth());
@@ -493,4 +565,21 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       });
     }
   }
+  public void onOpenTexture(final File openFile) {
+    this.texOpenButton.setActive(false);
+    if (openFile != null) {
+      LX lx = getLX();
+      String baseFilename = openFile.getName().substring(0, openFile.getName().indexOf('.'));
+      LX.log("Loading texture: " + baseFilename);
+
+      lx.engine.addTask(() -> {
+        LX.log("Running texture name setting task");
+        lx.command.perform(new LXCommand.Parameter.SetString(
+          texName,
+          baseFilename
+        ));
+      });
+    }
+  }
+
 }

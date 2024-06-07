@@ -1,0 +1,14 @@
+vec2 uvwrap(vec3 position) {
+    vec3 uposition = vec3((position.x - 0.5)*2.0, position.y, (position.z - 0.5)*2.0);
+    // Map y coordinates to v in texture space
+   float v = uposition.y;
+
+    // Map x and z coordinates to u (theta angle) in texture space
+    float theta = atan(uposition.z, uposition.x);
+    if (theta < 0) {
+        theta = theta + 2.0 * M_PI;
+    }
+    float u = theta / (2.0 * M_PI);
+    
+    return vec2(u, v);
+}
