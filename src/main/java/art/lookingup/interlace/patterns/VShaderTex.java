@@ -1,8 +1,6 @@
 package art.lookingup.interlace.patterns;
 
-import art.lookingup.util.EaseUtil;
 import art.lookingup.util.GLUtil;
-import art.lookingup.util.JavaUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -109,30 +107,13 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
 
   protected JsonObject isfObj;
 
-  protected EaseUtil easeUtil = new EaseUtil(0);
-
   float[] ledPositions;
 
   protected void updateLedPositions() {
-    LXPoint[] points = model.points;
-    float xMin = Float.MAX_VALUE;
-    float xMax = Float.MIN_VALUE;
-    float yMin = Float.MAX_VALUE;
-    float yMax = Float.MIN_VALUE;
-    float zMin = Float.MAX_VALUE;
-    float zMax = Float.MIN_VALUE;
-    for (LXPoint p : points) {
-      xMin = Math.min(xMin, p.x);
-      xMax = Math.max(xMax, p.x);
-      yMin = Math.min(yMin, p.y);
-      yMax = Math.max(yMax, p.y);
-      zMin = Math.min(zMin, p.z);
-      zMax = Math.max(zMax, p.z);
-    }
-    for (int i = 0; i < points.length; i++) {
-      ledPositions[i * 3] = (points[i].x - xMin)/(xMax - xMin);
-      ledPositions[i * 3 + 1] = (points[i].y - yMin)/(yMax - yMin);
-      ledPositions[i * 3 + 2] = (points[i].z - zMin)/(zMax - zMin);
+    for (int i = 0; i < model.points.length; i++) {
+      ledPositions[i * 3] = model.points[i].xn;
+      ledPositions[i * 3 + 1] = model.points[i].yn;
+      ledPositions[i * 3 + 2] = model.points[i].zn;
     }
   }
 
