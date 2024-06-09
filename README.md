@@ -19,8 +19,8 @@ On Windows for example, the Chromatik application JAR file is located at C:\Prog
 For now, the vertex shaders must be installed manually. Copy the contents of the VShader directory in the repository
 to ~/Chromatik/VShaders, including the textures/ subdirectory.
 
-Download the [Interlace package JAR](https://github.com/lookinguparts/Interlace/releases) from releases.  Copy the JAR
-file to ~/Chromatik/Packages.  Remove any pre-existing versions of the Interlace JAR that might be in that directory.  Once you have the package installed, you should be able to import the model.
+Download the [Interlace package JAR](https://github.com/lookinguparts/Interlace/releases) from releases.  Exit Chromatik.  Copy the JAR
+file to ~/Chromatik/Packages.  Remove any pre-existing versions of the Interlace JAR that might be in that directory.  Restart Chromatik.  Once you have the package installed, you should be able to import the model.
 
 
 ![Import](/assets/modelimport.gif)
