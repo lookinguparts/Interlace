@@ -1,7 +1,7 @@
 Interlace
 ========
 
-![Interlace](/assets/Interlace2.jpg)
+![Interlace](/assets/InterlaceChromatik.png)
 
 Interlace is a family of three hyperboloids. When in motion, hyperboloids seem to curve and bend, yet are only composed of rigid, straight lines. As participants rotate the outer ring, these strange creatures twist; transforming from a linear body into an elegant hourglass figure and back again.
 
@@ -19,7 +19,8 @@ On Windows for example, the Chromatik application JAR file is located at C:\Prog
 Download the [Interlace package JAR](https://github.com/lookinguparts/Interlace/releases) from releases.  Copy the JAR
 file to ~/Chromatik/Packages.  Remove any pre-existing versions of the Interlace JAR that might be in that directory.  Once you have the package installed, you should be able to import the model.
 
-
+For now, the vertex shaders must be installed manually. Copy the contents of the VShader directory in the repository
+to ~/Chromatik/VShaders, including the textures/ subdirectory.
 
 ![Import](/assets/modelimport.gif)
 
