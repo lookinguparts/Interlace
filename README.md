@@ -16,11 +16,12 @@ Backup the standard Chromatik application jar.  Replace the Chromatik applicatio
 This JAR file contains the JOGL libraries necessary for shaders to work.  This should be a temporary measure while issues with the Chromatik Plugin importing process are worked out.
 On Windows for example, the Chromatik application JAR file is located at C:\Program Files\Chromatik\app\glxstudio-1.0.0-jar-with-dependencies.
 
+For now, the vertex shaders must be installed manually. Copy the contents of the VShader directory in the repository
+to ~/Chromatik/VShaders, including the textures/ subdirectory.
+
 Download the [Interlace package JAR](https://github.com/lookinguparts/Interlace/releases) from releases.  Copy the JAR
 file to ~/Chromatik/Packages.  Remove any pre-existing versions of the Interlace JAR that might be in that directory.  Once you have the package installed, you should be able to import the model.
 
-For now, the vertex shaders must be installed manually. Copy the contents of the VShader directory in the repository
-to ~/Chromatik/VShaders, including the textures/ subdirectory.
 
 ![Import](/assets/modelimport.gif)
 
