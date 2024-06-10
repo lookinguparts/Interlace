@@ -142,7 +142,8 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
     glDrawable.getContext().makeCurrent();
     gl = glDrawable.getGL().getGL3();
-    vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
+    //vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
+    vertexBuffer = FloatBuffer.wrap(ledPositions);
 
     // This is just a destination, make it large enough to accept all the vertex data.  The vertex
     // shader always outputs the all the elements.  To return just some of the points, attach a
@@ -283,7 +284,18 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     totalTime += deltaMs/1000.0;
     glDrawable.getContext().makeCurrent();
     updateLedPositions();
-    vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
+    //vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
+    //vertexBuffer.clear();
+    //vertexBuffer.put(ledPositions);
+    /*
+    float position[] = vertexBuffer.array();
+    for (int i = 0; i < model.points.length; i++) {
+      vertexBuffer.put(i*3, model.points[i].xn);
+      position[i*3] = model.points[i].xn;
+      position[i*3 + 1] = model.points[i].yn;
+      position[i*3 + 2] = model.points[i].zn;
+    }
+     */
     gl.glBindBuffer(GL_ARRAY_BUFFER, bufferNames.get(Buffer.VERTEX));
     // TODO(tracy): Reload vertexBuffer data from xn, yn, zn here for moving points.
 
