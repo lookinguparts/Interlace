@@ -82,6 +82,25 @@ public class Point3D {
     return (float)Math.acos(dotProduct(p) / (length() * p.length()));
   }
 
+  public void normalize() {
+    float len = length();
+    x /= len;
+    y /= len;
+    z /= len;
+  }
+
+  public void add(Point3D p) {
+    x += p.x;
+    y += p.y;
+    z += p.z;
+  }
+
+  public void subtract(Point3D p) {
+    x -= p.x;
+    y -= p.y;
+    z -= p.z;
+  }
+
   public float x;
   public float y;
   public float z;
