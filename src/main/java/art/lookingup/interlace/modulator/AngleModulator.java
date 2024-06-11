@@ -234,7 +234,7 @@ public class AngleModulator extends LXModulator implements LXOscComponent {
       }
     }
     if (lx != null)
-      lx.getModel().bang();
+      lx.getModel().update(true, true);
   }
 
   @Override
