@@ -28,4 +28,13 @@ public abstract class Wavetable {
             return 0;
         return samples[index];
     }
+
+    void reverse() {
+        int n = samples.length;
+        for (int i = 0; i < n / 2; i++) {
+            float temp = samples[i];
+            samples[i] = samples[n - i - 1];
+            samples[n - i - 1] = temp;
+        }
+    }
 }

@@ -76,7 +76,7 @@ public class FlareletGen {
     wavetable.generateWavetable(1f, 0f);
     sharedWavetables[2] = wavetable;
 
-    wavetable = new StepDecayWavetable(samples, width, samples - width, forward);
+    wavetable = new StepDecayWavetable(samples, 4, samples - 4, forward);
     wavetable.generateWavetable(1f, 0f);
     sharedWavetables[3] = wavetable;
 

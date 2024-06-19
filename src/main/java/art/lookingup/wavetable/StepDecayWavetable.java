@@ -23,5 +23,8 @@ public class StepDecayWavetable extends Wavetable {
             samples[i] = offset;
         }
         samples[numSamples] = samples[0];
+        if (!forward) {
+           reverse();
+        }
     }
 }
