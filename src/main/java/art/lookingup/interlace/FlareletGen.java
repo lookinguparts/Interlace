@@ -89,6 +89,13 @@ public class FlareletGen {
     sharedWavetables[5] = wavetable;
   }
 
+  public void startFlareletAll() {
+    for (int i = 0; i < 16; i++) {
+      Flarelet flarelet = startFlarelet(i);
+      runningFlarelets.add(flarelet);
+    }
+  }
+
   /**
    * Starts a flarelet on the current strip and increments the strip number for the next flarelet.
    * @return

@@ -50,6 +50,10 @@ public class FlareletBang extends LXPattern {
   public final BooleanParameter bang2 = new BooleanParameter("bang2", false);
   public final BooleanParameter bang3 = new BooleanParameter("bang3", false);
 
+  public final BooleanParameter ring1 = new BooleanParameter("ring1", false);
+  public final BooleanParameter ring2 = new BooleanParameter("ring2", false);
+  public final BooleanParameter ring3 = new BooleanParameter("ring3", false);
+
   protected FlareletGen flareletGen1;
   protected FlareletGen flareletGen2;
   protected FlareletGen flareletGen3;
@@ -89,6 +93,7 @@ public class FlareletBang extends LXPattern {
     addParameter("width1", widthKnob1);
     addParameter("color1", colorKnob1);
     addParameter("swatch1", swatch1);
+    addParameter("ring1", ring1);
 
     addParameter("fadeT2", fadeTime2);
     addParameter("speed2", speed2);
@@ -97,6 +102,7 @@ public class FlareletBang extends LXPattern {
     addParameter("width2", widthKnob2);
     addParameter("color2", colorKnob2);
     addParameter("swatch2", swatch2);
+    addParameter("ring2", ring2);
 
     addParameter("fadeT3", fadeTime3);
     addParameter("speed3", speed3);
@@ -105,6 +111,7 @@ public class FlareletBang extends LXPattern {
     addParameter("width3", widthKnob3);
     addParameter("color3", colorKnob3);
     addParameter("swatch3", swatch3);
+    addParameter("ring3", ring3);
 
     triangleTable.generateWavetable(1f, 0f);
     stepDecayTable.generateWavetable(1f, 0f);
@@ -121,13 +128,25 @@ public class FlareletBang extends LXPattern {
   public void banged(int which) {
     switch (which) {
       case 1:
-        flareletGen1.startFlareletIncrement();
+        if (ring1.isOn()) {
+          flareletGen1.startFlareletAll();
+        } else {
+          flareletGen1.startFlareletIncrement();
+        }
         break;
       case 2:
-        flareletGen2.startFlareletIncrement();
+        if (ring2.isOn()) {
+          flareletGen2.startFlareletAll();
+        } else {
+          flareletGen2.startFlareletIncrement();
+        }
         break;
       case 3:
-        flareletGen3.startFlareletIncrement();
+        if (ring3.isOn()) {
+          flareletGen3.startFlareletAll();
+        } else {
+          flareletGen3.startFlareletIncrement();
+        }
         break;
     }
   }

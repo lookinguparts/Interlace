@@ -167,16 +167,18 @@ float lightning_layer(vec2 uv, vec2 cv, float rotateAmt) {
 void main(){
     vec2 uv = uvwrap(position);
     uv = uv - 0.5;
+    uv *= 2.0; // -1 to 1 -1.0 + 2.0*fragCoord.xy / iResolution.xy;
     vec3 color = vec3(0., 0., 0.);
 
     float pal_d = length(uv) * 2.0;
     uv.x -= x;
     uv.y -= y;
-    vec2 cv = vec2(-0.5,0) + position.xz;  // 1 to 1 + -.5, 0
+    vec2 cv = uv; //vec2(-0.5,0) + uv.xy; // position.xz;  // 1 to 1 + -.5, 0
     cv.x -= x;
     cv.y -= y;
 
-    uv *= 2.0; // -1 to 1 -1.0 + 2.0*fragCoord.xy / iResolution.xy;
+
+
 
     float angle = fTime;
     float d = clamp(lightning_layer(uv, cv, angle), 0.0, 1.0);

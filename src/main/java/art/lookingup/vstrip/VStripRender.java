@@ -84,6 +84,11 @@ public class VStripRender {
                     LXColor.rgba((int)(((int)Colors.red(clr))*val),
                             (int)(((int)Colors.green(clr))*val),
                             (int)(((int)Colors.blue(clr))*val), 255), blend);
+            //colors[pt.p.index] =
+            //  LXColor.rgba((int)(((int)Colors.red(clr))*val),
+            //    (int)(((int)Colors.green(clr))*val),
+            //    (int)(((int)Colors.blue(clr))*val), 255);
+            //colors[pt.p.index] = LXColor.scaleBrightness(clr, val);
         }
         return minMax;
     }
