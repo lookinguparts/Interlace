@@ -25,13 +25,34 @@ file to ~/Chromatik/Packages.  Remove any pre-existing versions of the Interlace
 
 ![Import](/assets/modelimport.gif)
 
-Choose 'InterlaceV1.lxm'.
+Choose 'Interlace60x20.lxm'.
 
 ![Import2](/assets/modelimport2.png)
 
 If your Interlace content package JAR loaded properly, you should now have a
 StripSelector pattern available under the Test section.
 ![StripSelector](/assets/stripselector.png)
+
+Example Project
+================
+In the Projects/ directory there is an interlace_base.lxp project file that can be
+used as a starting point.  It has the model configured with appropriate view tags and the 
+20 foot spacing of hyperboloids.  You should copy the file to your ~/Chromatik/Projects directory.
+If it is your first time installing the content package, you might also be able to find the
+project in the Chromatik project browser under the Interlace directory.  Until the static content reloading
+for third-party packages is released, the easiest method is to just copy the files from our
+repository directory to your Chromatik directory.
+
+Views
+=======
+Chromatik supports the concept of views.  Views can be used to provide patterns with a partial sub-model of the project
+such that the pattern only renders to that sub-model.  For our setup, the points in each view will be re-normalized so that
+they are centered around the origin of the sub-model and not the origin of world-space. In the screenshot below, the views
+have been highlighted.  As you can see, each hyperboloid is rendering a separate shader program.  Each of the H1, H2, and H3
+channels have the view selector highlighted and configured to point to the corresponding
+view instance as configured in the VIEWS panel.
+[![Views](/assets/viewconfig.png)](assets/viewconfig.png)
+
 
 Custom Java Patterns
 ====================
