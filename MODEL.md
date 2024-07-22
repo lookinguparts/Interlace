@@ -21,3 +21,12 @@ Led strip length = 3.65 meters / 11.98 feet.
 28 leds / meter = 8.5344 leds / foot. leds per inch = 0.7112. led spacing (inches) = 1.40625
 Led strip length = 3.65 meters / 11.98 feet.
 28 leds / meter = 102 leds.
+
+60 leds / meter = 18.288 leds / foot. leds per inch = 1.524. led spacing (inches) = 0.65625
+Led strip length = 3.65 meters / 11.98 feet.
+60 leds / meter = 219 leds.
+
+
+Each hyperboloid is spaced 20' apart.  An isoceles triangle with sides of length 20
+centered around the origin as vertices at (0, 15), (-17.32050808, -7.5), and (17.32050808, -7.5).
+In feet, the vertices are (0, 180), (-207.845, -90), and (207.845, -90).

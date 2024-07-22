@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "timestamp": 1721689438031,
+  "fixtures": [
+    {
+      "jsonFixtureType": "Hyperboloid60",
+      "jsonParameters": {},
+      "id": 9509,
+      "class": "heronarts.lx.structure.JsonFixture",
+      "internal": {
+        "modulationColor": 0,
+        "modulationControlsExpanded": true,
+        "modulationsExpanded": true
+      },
+      "parameters": {
+        "label": "Hyperboloid 1",
+        "x": 0.0,
+        "y": 0.0,
+        "z": 180.0,
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "roll": 0.0,
+        "scale": 1.0,
+        "selected": false,
+        "deactivate": false,
+        "enabled": false,
+        "brightness": 1.0,
+        "identify": false,
+        "mute": false,
+        "solo": false,
+        "tags": "h1",
+        "fixtureType": "Hyperboloid60"
+      },
+      "children": {}
+    },
+    {
+      "jsonFixtureType": "Hyperboloid60",
+      "jsonParameters": {},
+      "id": 9526,
+      "class": "heronarts.lx.structure.JsonFixture",
+      "internal": {
+        "modulationColor": 0,
+        "modulationControlsExpanded": true,
+        "modulationsExpanded": true
+      },
+      "parameters": {
+        "label": "Hyperboloid 2",
+        "x": -207.845,
+        "y": 0.0,
+        "z": -90.0,
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "roll": 0.0,
+        "scale": 1.0,
+        "selected": false,
+        "deactivate": false,
+        "enabled": false,
+        "brightness": 1.0,
+        "identify": false,
+        "mute": false,
+        "solo": false,
+        "tags": "h2",
+        "fixtureType": "Hyperboloid60"
+      },
+      "children": {}
+    },
+    {
+      "jsonFixtureType": "Hyperboloid60",
+      "jsonParameters": {},
+      "id": 9543,
+      "class": "heronarts.lx.structure.JsonFixture",
+      "internal": {
+        "modulationColor": 0,
+        "modulationControlsExpanded": true,
+        "modulationsExpanded": true
+      },
+      "parameters": {
+        "label": "Hyperboloid 3",
+        "x": 207.845,
+        "y": 0.0,
+        "z": -90.0,
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "roll": 0.0,
+        "scale": 1.0,
+        "selected": true,
+        "deactivate": false,
+        "enabled": false,
+        "brightness": 1.0,
+        "identify": false,
+        "mute": false,
+        "solo": false,
+        "tags": "h3",
+        "fixtureType": "Hyperboloid60"
+      },
+      "children": {}
+    }
+  ],
+  "normalization": {
+    "normalizationMode": 0,
+    "normalizationX": 0.0,
+    "normalizationY": 0.0,
+    "normalizationZ": 0.0,
+    "normalizationWidth": 1000.0,
+    "normalizationHeight": 1000.0,
+    "normalizationDepth": 1000.0
+  }
+}
