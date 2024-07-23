@@ -12,9 +12,14 @@ Visit [Chromatik.co](https://chromatik.co) to download the latest version of Chr
 
 Read the [Chromatik User Guide](https://chromatik.co/guide).
 
-Backup the standard Chromatik application jar.  Replace the Chromatik application JAR file with lib/[glxstudio-interlace-1.0.0-jar-with-dependencies.jar](lib%2Fglxstudio-interlace-1.0.0-jar-with-dependencies.jar)
+Backup the standard Chromatik application jar.  
+* On Windows, replace the Chromatik application JAR file with lib/[glxstudio-interlace-1.0.0-jar-with-dependencies.jar](lib%2Fglxstudio-interlace-1.0.0-jar-with-dependencies.jar)
+* On Mac Apple Silicon, replace the Chromatik applicatin JAR with lib/[glxstudio-interlace-1.0.0-jar-with-dependencies-mac.jar](lib%2Fglxstudio-interlace-1.0.0-jar-with-dependencies-mac.jar)
+* On Mac Intel, replace the Chromatik application JAR with lib/[glxstudio-interlace-1.0.0-jar-with-dependencies-mac-intel.jar](lib%2Fglxstudio-interlace-1.0.0-jar-with-dependencies-mac-intel.jar)
+
 This JAR file contains the JOGL libraries necessary for shaders to work.  This should be a temporary measure while issues with the Chromatik Plugin importing process are worked out.
 On Windows for example, the Chromatik application JAR file is located at C:\Program Files\Chromatik\app\glxstudio-1.0.0-jar-with-dependencies.
+These jar files were built with the v1.0.0 release of Chromatik.
 
 For now, the vertex shaders must be installed manually. Copy the contents of the VShader directory in the repository
 to ~/Chromatik/VShaders, including the textures/ subdirectory.
