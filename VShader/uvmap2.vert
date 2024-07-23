@@ -62,7 +62,7 @@ uniform float yscl;
 uniform float zscl;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
 // Pi, the ratio of a circle's circumference to its diameter.
 const float M_PI = 3.14159265358979323846264338327950288;
@@ -98,5 +98,5 @@ void main() {
     vec2 uv = map_coordinates_to_texture_space(uposition);
     uv = vec2((uv.x - x)*xscl, (uv.y-y)*yscl);
     vec3 fragColor = vec3(uv.x,uv.y, 0.0);
-    tPosition = vec3(clamp(fragColor.x, 0.0, 1.0), clamp(fragColor.y, 0.0, 1.0), clamp(fragColor.z, 0.0, 1.0));
+    outColor = vec3(clamp(fragColor.x, 0.0, 1.0), clamp(fragColor.y, 0.0, 1.0), clamp(fragColor.z, 0.0, 1.0));
 }

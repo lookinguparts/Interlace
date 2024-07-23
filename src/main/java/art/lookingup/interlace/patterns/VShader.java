@@ -1,6 +1,7 @@
 package art.lookingup.interlace.patterns;
 
 import heronarts.glx.GLX;
+import heronarts.glx.ui.component.UIKnob;
 import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.model.LXPoint;
 import art.lookingup.util.GLUtil;
@@ -52,6 +53,8 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
   StringParameter scriptName = new StringParameter("scriptName", "default");
   CompoundParameter speed = new CompoundParameter("speed", 1f, 0f, 20f);
+  CompoundParameter alphaThresh = new CompoundParameter("alfTh", 0.1f, -0.1f, 1f).
+    setDescription("Intensity values below threshold will use transparency.");
 
   // These parameters are loaded from the ISF Json declaration at the top of the shader
   LinkedHashMap<String, CompoundParameter> scriptParams = new LinkedHashMap<String, CompoundParameter>();
@@ -71,6 +74,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     initializeGLContext();
     addParameter("scriptName", scriptName);
     addParameter("speed", speed);
+    addParameter("alfTh", alphaThresh);
     glInit(lx);
   }
 
@@ -228,7 +232,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     }
 
     // At this point, our only dependency is the integer shaderProgramId.
-    gl.glTransformFeedbackVaryings(shaderProgramId, 1, new String[]{"tPosition"}, GL_INTERLEAVED_ATTRIBS);
+    gl.glTransformFeedbackVaryings(shaderProgramId, 1, new String[]{"outColor"}, GL_INTERLEAVED_ATTRIBS);
     GLUtil.link(gl, shaderProgramId);
 
     /*
@@ -276,7 +280,8 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   /**
    * Run once per frame.  Copy the vertex data to the OpenGL buffer.
    * Tell OpenGL which buffer to use as the transform feedback buffer.
-   * GL_RASTERIZER_DISCARD tells OpenGL to stop the pipeline after the vertex shader.
+   * GL_RASTERIZER_DISCARD tells OpenGL to stop the pipeline after the vertex shader since
+   * we are just using OpenGL Transform Feedback.
    *
    * @param deltaMs
    */
@@ -284,24 +289,9 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     totalTime += deltaMs/1000.0;
     glDrawable.getContext().makeCurrent();
     updateLedPositions();
-    //vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
-    //vertexBuffer.clear();
-    //vertexBuffer.put(ledPositions);
-    /*
-    float position[] = vertexBuffer.array();
-    for (int i = 0; i < model.points.length; i++) {
-      vertexBuffer.put(i*3, model.points[i].xn);
-      position[i*3] = model.points[i].xn;
-      position[i*3 + 1] = model.points[i].yn;
-      position[i*3 + 2] = model.points[i].zn;
-    }
-     */
     gl.glBindBuffer(GL_ARRAY_BUFFER, bufferNames.get(Buffer.VERTEX));
-    // TODO(tracy): Reload vertexBuffer data from xn, yn, zn here for moving points.
 
-    //vertexBuffer.clear();
-    //vertexBuffer.put(ledPositions, 0, ledPositions.length);
-    //vertexBuffer.put(ledPositions);
+
     gl.glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * Float.BYTES, vertexBuffer, GL_STATIC_DRAW);
     int inputAttrib = gl.glGetAttribLocation(shaderProgramId, "position");
     gl.glEnableVertexAttribArray(inputAttrib);
@@ -362,19 +352,19 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     // The alpha level should be scaled from 1 to 0 based on the range from 0 to threshold.
     // Hardcoding the threshold for now since it is some complicated UI work to fit it into
     // the dynamic parameter system.
+    float threshold = alphaThresh.getValuef();
     for (int i = 0; i < points.length; i++) {
-      float red = tfbBuffer.get(i*3);
-      float green = tfbBuffer.get(i*3 + 1);
-      float blue = tfbBuffer.get(i*3 + 2);
+      float red = tfbBuffer.get(i * 3);
+      float green = tfbBuffer.get(i * 3 + 1);
+      float blue = tfbBuffer.get(i * 3 + 2);
       int color = LXColor.rgbf(red, green, blue);
-      float bright = LXColor.luminosity(color)/100f;
-      float threshold = 0.1f;
+      float bright = LXColor.luminosity(color) / 100f;
       if (bright < threshold) {
-        float alpha = (bright/threshold);
+        float alpha = (bright / threshold);
         colors[points[i].index] = LXColor.rgba(LXColor.red(color),
           LXColor.green(color),
           LXColor.blue(color),
-          (int)(255f * alpha));
+          (int) (255f * alpha));
       } else {
         colors[points[i].index] = color;
       }
@@ -383,6 +373,8 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
   @Override
   public void buildDeviceControls(LXStudio.UI ui, UIDevice uiDevice, VShader pattern) {
+    int minContentWidth = 190;
+    uiDevice.setContentWidth(minContentWidth);
     final UILabel fileLabel = (UILabel)
       new UILabel(0, 0, 120, 18)
         .setLabel(pattern.scriptName.getString())
@@ -396,7 +388,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       fileLabel.setLabel(pattern.scriptName.getString());
     });
 
-    this.openButton = (UIButton) new UIButton(122, 0, 18, 18) {
+    this.openButton = (UIButton) new UIButton(125, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         if (on) {
@@ -416,7 +408,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       .addToContainer(uiDevice);
 
 
-    final UIButton resetButton = (UIButton) new UIButton(140, 0, 18, 18) {
+    final UIButton resetButton = (UIButton) new UIButton(148, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         if (on) {
@@ -447,18 +439,20 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     // Add sliders to container on every reload
     pattern.onReload.addListener(p -> {
       sliders.removeAllChildren();
+      new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, alphaThresh)
+        .addToContainer(sliders);
       new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, speed)
         .addToContainer(sliders);
       for (CompoundParameter slider : pattern.scriptParams.values()) {
         new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, slider)
           .addToContainer(sliders);
       }
-      float contentWidth = LXUtils.maxf(140, sliders.getContentWidth());
+      float contentWidth = LXUtils.maxf(minContentWidth, sliders.getContentWidth());
       uiDevice.setContentWidth(contentWidth);
       //resetButton.setX(contentWidth - resetButton.getWidth());
       //this.openButton.setX(resetButton.getX() - 2 - this.openButton.getWidth());
       error.setWidth(contentWidth);
-      fileLabel.setWidth(this.openButton.getX() - 2);
+      //fileLabel.setWidth(this.openButton.getX() - 2);
     }, true);
 
     pattern.error.addListener(p -> {

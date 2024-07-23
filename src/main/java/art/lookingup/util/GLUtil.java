@@ -26,8 +26,6 @@ import static com.jogamp.opengl.GL2ES3.*;
 import static com.jogamp.opengl.GL2ES3.GL_RASTERIZER_DISCARD;
 
 public class GLUtil {
-  private static final Logger logger = Logger.getLogger(GLUtil.class.getName());
-
   static public class VSGLContext {
 
     public VSGLContext(GL3 gl) {
@@ -182,7 +180,6 @@ public class GLUtil {
     }
 
     if (vsGLCtx.glTexture != null) {
-      //logger.info("Attempting to bind the textureLoc to slot 0.");
       vsGLCtx.glTexture.enable(vsGLCtx.gl);
       vsGLCtx.glTexture.bind(vsGLCtx.gl);
       vsGLCtx.gl.glUniform1i(vsGLCtx.textureLoc, 0); // 0 is the texture unit
@@ -199,12 +196,6 @@ public class GLUtil {
 
     vsGLCtx.gl.glUseProgram(0);
     vsGLCtx.gl.glDisable(GL_RASTERIZER_DISCARD);
-
-    // For manually checking the first few output values in the transform feedback buffer.
-    for (int i = 0; i < 21; i++) {
-      //System.out.print(tfbBuffer.get(i) + ",");
-    }
-    //System.out.println();
 
     vsGLCtx.gl.getContext().release();
   }
@@ -233,7 +224,7 @@ public class GLUtil {
   // so that we can stay compatible with older Raspberry Pi's but the interface is the same for compiling shaders
   // and linking programs so there is effectively no difference.
   // TODO(tracy): I need to add some intermediate stateful static inner class here to properly track line numbers
-  // across includes.  Also, failure modes should be more smoothed out.
+  // across includes.  Also, failure modes should be more smoothed out with respect to Chromatik UI experience.
   // https://github.com/titanicsend/LXStudio-TE
   //
   //
@@ -359,10 +350,12 @@ public class GLUtil {
   }
   public static void link(GL3 gl3, int programId) {
     gl3.glLinkProgram(programId);
-    validateStatus(gl3, programId, GL3.GL_LINK_STATUS);
+    // This is having issues on Mac with just vertex shaders.
+    ///validateStatus(gl3, programId, GL3.GL_LINK_STATUS);
 
     gl3.glValidateProgram(programId);
-    validateStatus(gl3, programId, GL3.GL_VALIDATE_STATUS);
+    // This is having issues on Mac with just vertex shaders.
+    //validateStatus(gl3, programId, GL3.GL_VALIDATE_STATUS);
   }
 
 

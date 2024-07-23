@@ -9,6 +9,7 @@ import com.jogamp.opengl.util.GLBuffers;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 import heronarts.glx.GLX;
 import heronarts.glx.ui.component.UIButton;
+import heronarts.glx.ui.component.UIKnob;
 import heronarts.glx.ui.component.UILabel;
 import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.LX;
@@ -57,6 +58,9 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
   StringParameter scriptName = new StringParameter("scriptName", "texture");
   StringParameter texName = new StringParameter("tName", "fractal5");
   CompoundParameter speed = new CompoundParameter("speed", 1f, 0f, 20f);
+  CompoundParameter alphaThresh = new CompoundParameter("alfTh", 0.1f, -0.1f, 1f).
+    setDescription("Intensity values below threshold will use transparency.");
+
 
   // These parameters are loaded from the ISF Json declaration at the top of the shader
   LinkedHashMap<String, CompoundParameter> scriptParams = new LinkedHashMap<String, CompoundParameter>();
@@ -79,6 +83,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
     addParameter("scriptName", scriptName);
     addParameter("texName", texName);
     addParameter("speed", speed);
+    addParameter("alfTh", alphaThresh);
 
 
     VShader.initializeGLContext();
@@ -256,7 +261,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
     }
 
     // At this point, our only dependency is the integer shaderProgramId.
-    gl.glTransformFeedbackVaryings(shaderProgramId, 1, new String[]{"tPosition"}, GL_INTERLEAVED_ATTRIBS);
+    gl.glTransformFeedbackVaryings(shaderProgramId, 1, new String[]{"outColor"}, GL_INTERLEAVED_ATTRIBS);
     GLUtil.link(gl, shaderProgramId);
 
     /*
@@ -433,13 +438,13 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
     // The alpha level should be scaled from 1 to 0 based on the range from 0 to threshold.
     // Hardcoding the threshold for now since it is some complicated UI work to fit it into
     // the dynamic parameter system.
+    float threshold = alphaThresh.getValuef();
     for (int i = 0; i < points.length; i++) {
       float red = tfbBuffer.get(i*3);
       float green = tfbBuffer.get(i*3 + 1);
       float blue = tfbBuffer.get(i*3 + 2);
       int color = LXColor.rgbf(red, green, blue);
       float bright = LXColor.luminosity(color)/100f;
-      float threshold = 0.1f;
       if (bright < threshold) {
         float alpha = (bright/threshold);
         colors[points[i].index] = LXColor.rgba(LXColor.red(color),
@@ -454,8 +459,11 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
 
   @Override
   public void buildDeviceControls(LXStudio.UI ui, UIDevice uiDevice, VShaderTex pattern) {
+    int minContentWidth = 259;
+    uiDevice.setContentWidth(minContentWidth);
+
     final UILabel fileLabel = (UILabel)
-      new UILabel(0, 0, 120, 18)
+      new UILabel(0, 0, 90, 18)
         .setLabel(pattern.scriptName.getString())
         .setBackgroundColor(LXColor.BLACK)
         .setBorderRounding(4)
@@ -467,7 +475,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
       fileLabel.setLabel(pattern.scriptName.getString());
     });
 
-    this.openButton = (UIButton) new UIButton(122, 0, 18, 18) {
+    this.openButton = (UIButton) new UIButton(95, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         if (on) {
@@ -489,7 +497,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
 
     // Texture selection:
     final UILabel texFileLabel = (UILabel)
-      new UILabel(160, 0, 120, 18)
+      new UILabel(118, 0, 90, 18)
         .setLabel(pattern.texName.getString())
         .setBackgroundColor(LXColor.BLACK)
         .setBorderRounding(4)
@@ -501,7 +509,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
       texFileLabel.setLabel(pattern.texName.getString());
     });
 
-    this.texOpenButton = (UIButton) new UIButton(280, 0, 18, 18) {
+    this.texOpenButton = (UIButton) new UIButton(213, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         ((GLX)lx).showOpenFileDialog(
@@ -519,7 +527,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
       .addToContainer(uiDevice);
 
 
-    final UIButton texResetButton = (UIButton) new UIButton(298, 0, 18, 18) {
+    final UIButton texResetButton = (UIButton) new UIButton(236, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         if (on) {
@@ -550,18 +558,20 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
     // Add sliders to container on every reload
     pattern.onReload.addListener(p -> {
       sliders.removeAllChildren();
+      new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, alphaThresh)
+        .addToContainer(sliders);
       new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, speed)
         .addToContainer(sliders);
       for (CompoundParameter slider : pattern.scriptParams.values()) {
         new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, slider)
           .addToContainer(sliders);
       }
-      float contentWidth = LXUtils.maxf(320, sliders.getContentWidth());
+      float contentWidth = LXUtils.maxf(minContentWidth, sliders.getContentWidth());
       uiDevice.setContentWidth(contentWidth);
       //resetButton.setX(contentWidth - resetButton.getWidth());
       //this.openButton.setX(resetButton.getX() - 2 - this.openButton.getWidth());
       error.setWidth(contentWidth);
-      fileLabel.setWidth(this.openButton.getX() - 2);
+      //fileLabel.setWidth(this.openButton.getX() - 2);
     }, true);
 
     pattern.error.addListener(p -> {

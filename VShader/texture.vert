@@ -32,9 +32,9 @@ uniform float y1;
 uniform sampler2D textureSampler;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
-#include <const.vert>
+#include <consts.vert>
 #include <uvwrap.vert>
 
 void main(){
@@ -48,5 +48,5 @@ void main(){
     //st.y += 0.5;
     //st.x += 0.5;
     color = texture(textureSampler, st).rgb;
-    tPosition = color;
+    outColor = color;
 }

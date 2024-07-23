@@ -33,9 +33,9 @@ uniform sampler2D textureSampler;
 uniform sampler2D audioTexture;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
-#include <const.vert>
+#include <consts.vert>
 #include <uvwrap.vert>
 
 void main(){
@@ -55,5 +55,5 @@ void main(){
     } else {
         color = vec3(1.0, 1.0, 1.0);
     }
-    tPosition = color;
+    outColor = color;
 }

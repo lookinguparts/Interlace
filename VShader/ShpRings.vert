@@ -112,11 +112,11 @@ uniform float rspeed;
 
 #include <palettes.vert>
 #include <sdf2d.vert>
-#include <const.vert>
+#include <consts.vert>
 #include <uvwrap.vert>
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
 float ring(vec2 p, float r1, float r2, float h) {
     //float d = sdUnevenCapsule(ruv3, r1, r2, h);
@@ -161,5 +161,5 @@ void main() {
 
     color *= vec3(clamp(paletteN(pal_d + fTime * .5, palval)*bright, 0., 1.));
 
-    tPosition = color;
+    outColor = color;
 }

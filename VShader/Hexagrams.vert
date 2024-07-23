@@ -86,11 +86,11 @@ uniform float cspeed;
 uniform float pw;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
 #include <palettes.vert>
 #include <sdf2d.vert>
-#include <const.vert>
+#include <consts.vert>
 #include <uvwrap.vert>
 
 
@@ -124,5 +124,5 @@ void main(){
         //col += bright;
     }
 
-    tPosition = clamp(col, 0.0, 1.0);
+    outColor = clamp(col, 0.0, 1.0);
 }

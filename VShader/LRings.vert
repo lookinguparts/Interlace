@@ -86,11 +86,11 @@ uniform float pald;
 uniform float pw;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
 #include <palettes.vert>
 #include <sdf2d.vert>
-#include <const.vert>
+#include <consts.vert>
 #include <uvwrap.vert>
 
 
@@ -130,5 +130,5 @@ void main(){
 
     color *= vec3(clamp(paletteN(pal_d + fTime * .5, palval)*bright, 0., 1.));
 
-    tPosition = color;
+    outColor = color;
 }

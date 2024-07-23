@@ -62,11 +62,11 @@ uniform float yscl;
 uniform float zscl;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
 
 void main() {
     vec3 fragColor = vec3((position.x - x) * xscl, (position.y-y) * yscl, (position.z-z) * zscl);
 
-    tPosition = vec3(clamp(abs(fragColor.x), 0.0, 1.0), clamp(abs(fragColor.y), 0.0, 1.0), clamp(abs(fragColor.z), 0.0, 1.0));
+    outColor = vec3(clamp(abs(fragColor.x), 0.0, 1.0), clamp(abs(fragColor.y), 0.0, 1.0), clamp(abs(fragColor.z), 0.0, 1.0));
 }

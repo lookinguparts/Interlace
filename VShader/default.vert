@@ -30,7 +30,7 @@ uniform float x1;
 uniform float y1;
 
 layout(location = 0) in vec3 position;
-out vec3 tPosition;
+out vec3 outColor;
 
 // A bunch of mathematical constants
 
@@ -141,5 +141,5 @@ void main(){
 
     //d = clamp(d, 0., 1.);
     fragColor = col;
-    tPosition = clamp(fragColor, 0., 1.);
+    outColor = clamp(fragColor, 0., 1.);
 }
