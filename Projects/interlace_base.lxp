@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "timestamp": 1721689598580,
+  "timestamp": 1721705487321,
   "model": {
     "id": 2,
     "class": "heronarts.lx.structure.LXStructure",
@@ -207,8 +207,7 @@
         },
         "children": {}
       }
-    ],
-    "file": "Interlace60x20.lxm"
+    ]
   },
   "engine": {
     "id": 1,
@@ -548,7 +547,7 @@
               "modulationsExpanded": true
             },
             "parameters": {
-              "label": "",
+              "label": "SoundStage",
               "mode": 0,
               "xAbsolute": 0.0,
               "yAbsolute": 0.0,
@@ -793,17 +792,17 @@
               "band-2": 0.0,
               "band-3": 0.0,
               "band-4": 0.0,
-              "band-5": 0.0,
+              "band-5": 9.483745663164678E-4,
               "band-6": 0.0,
               "band-7": 0.0,
               "band-8": 0.0,
               "band-9": 0.0,
               "band-10": 0.0,
-              "band-11": 0.0,
-              "band-12": 0.0,
-              "band-13": 0.0,
-              "band-14": 0.0,
-              "band-15": 0.0,
+              "band-11": 0.10939705456643267,
+              "band-12": 0.10551266191938302,
+              "band-13": 0.01089340123286231,
+              "band-14": 0.1860450045513593,
+              "band-15": 0.007505008739331465,
               "band-16": 0.0
             },
             "children": {}
@@ -819,7 +818,7 @@
           "modulationsExpanded": true
         },
         "parameters": {
-          "label": "",
+          "label": "Mixer",
           "crossfader": 0.5,
           "crossfaderBlendMode": 0,
           "focusedChannel": 3,
@@ -1089,6 +1088,7 @@
                   "customCycleTimeSecs": 60.0,
                   "scriptName": "FbmLightning",
                   "speed": 0.2,
+                  "alfTh": 0.10000000149011612,
                   "x": -0.3400000035762787,
                   "y": 0.10000000149011612,
                   "radius": -0.01724138855934143,
@@ -1254,6 +1254,7 @@
                   "customCycleTimeSecs": 60.0,
                   "scriptName": "ShpRings",
                   "speed": 1.1379310339689255,
+                  "alfTh": 0.10000000149011612,
                   "shp": 2.1482758540660143,
                   "s1": -0.04551724219630504,
                   "s2": 0.1303448214253473,
@@ -1422,6 +1423,7 @@
                   "customCycleTimeSecs": 60.0,
                   "scriptName": "Kish4",
                   "speed": 1.0,
+                  "alfTh": 0.10000000149011612,
                   "x1": 1.0,
                   "y1": 0.0
                 },
@@ -1462,7 +1464,32 @@
           "label": "Modulation"
         },
         "children": {},
-        "modulators": [],
+        "modulators": [
+          {
+            "id": 9970,
+            "class": "art.lookingup.interlace.modulator.AngleModulator",
+            "internal": {
+              "modulationColor": 0,
+              "modulationControlsExpanded": true,
+              "modulationsExpanded": true
+            },
+            "parameters": {
+              "label": "Angles",
+              "running": true,
+              "trigger": false,
+              "midiFilter/enabled": true,
+              "midiFilter/channel": 16,
+              "midiFilter/minNote": 0,
+              "midiFilter/noteRange": 128,
+              "midiFilter/minVelocity": 1,
+              "midiFilter/velocityRange": 127,
+              "angle1": 0.32799997739493847,
+              "angle2": 0.2719999812543392,
+              "angle3": 0.3200000412762165
+            },
+            "children": {}
+          }
+        ],
         "modulations": [],
         "triggers": []
       },
@@ -1594,9 +1621,9 @@
         "depth": 2.0,
         "camera": {
           "active": false,
-          "radius": 560.7525387162566,
-          "theta": 117.01377952098846,
-          "phi": 10.026035815477371,
+          "radius": 692.9839382184626,
+          "theta": 355.0204232931137,
+          "phi": 7.783510357141495,
           "x": 0.0,
           "y": 71.53125,
           "z": 45.0
@@ -1604,9 +1631,9 @@
         "cue": [
           {
             "active": false,
-            "radius": 560.7525387162566,
-            "theta": 117.01377952098846,
-            "phi": 10.026035815477371,
+            "radius": 692.9839382184626,
+            "theta": 355.0204232931137,
+            "phi": 7.783510357141495,
             "x": 0.0,
             "y": 71.53125,
             "z": 45.0

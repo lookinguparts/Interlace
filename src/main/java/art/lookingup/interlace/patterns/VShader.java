@@ -394,7 +394,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
           ((GLX)lx).showOpenFileDialog(
             "Open Vertex Shader",
             "Vertex Shader",
-            new String[] { "vert" },
+            new String[] { "vtx" },
             GLUtil.shaderDir(lx) + File.separator,
             (path) -> { onOpen(new File(path)); }
           );

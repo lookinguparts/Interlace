@@ -85,15 +85,14 @@ That example calls renderPoint() for each point in the model/submodel so it can 
 Custom Shader Patterns
 ======================
 There is support for custom shader patterns.  These are modified vertex shaders that output RGB values.
-After you install the package, you should create the directory ~/Chromatik/VShaders/ and place the contents of the repository's VShader/ directory in it.  There currently is not
-support for textures but that will be coming soon.  In order to render on the surface of a cylinder, you should
-see the coordinate space remapping example in ShpRings.vert.  The shaders support an #include <funcs.vert> directive for sharing
+After you install the package, you should create the directory ~/Chromatik/VShaders/ and place the contents of the repository's VShader/ directory in it.  In order to render on the surface of a cylinder, you should
+see the coordinate space remapping example in uvwrap.vti.  The shaders support an #include <funcs.vti> directive for sharing
 common blocks of code.
 
 Due to some complications with tinyfd and AppleScript on Mac OS the vertex shader extensions
 are .vtx for a vertex shader and .vti for files that will be included by vertex shaders.  You
 probably want to set up IntelliJ IDEA to recognize these file extensions as GLSL files. You can
-do so by going to Settings -> Editor -> File Types and adding the extensions to the GLSL file type.
+do so by going to Settings -> Editor -> File Types and adding the extensions .vtx and .vti to the GLSL file type.
 
 
 Modular Audio/Visual Synthesis Guide

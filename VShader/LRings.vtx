@@ -110,7 +110,7 @@ mat2 Rot(float a) {
 }
 
 void main(){
-    vec2 uv = uvwrap(position);
+    vec2 uv = uvwraprot(position, fTime);
     uv = uv - 0.5;
     vec3 color = vec3(1., 1., 1.);
 

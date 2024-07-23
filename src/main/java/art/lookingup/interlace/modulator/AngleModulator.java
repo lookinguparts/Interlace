@@ -88,13 +88,21 @@ public class AngleModulator extends LXModulator implements LXOscComponent {
   protected void storeBottomPoints() {
     for (int hNum = 0; hNum < 3; hNum++) {
       // Hyperboloids are tagged with H1, H2, H3
-      List<LXModel> hyperboloids = lx.getModel().sub("H" + (hNum + 1));
+      String tag = "h" + (hNum + 1);
+      List<LXModel> hyperboloids = lx.getModel().sub(tag);
+      // Try capital H.
+      if (hyperboloids.size() == 0) {
+        tag = "H" + (hNum + 1);
+        hyperboloids = lx.getModel().sub(tag);
+      }
       if (hyperboloids.size() == 1) {
         for (int stripNum = 0; stripNum < 16; stripNum++) {
           List<LXModel> stripModel = hyperboloids.get(0).sub("strip" + stripNum);
           Point3D bottomPoint = new Point3D(stripModel.get(0).points[0].x, stripModel.get(0).points[0].y, stripModel.get(0).points[0].z);
           bottomPoints[hNum][stripNum] = bottomPoint;
         }
+      } else {
+        LX.log("Bad model, expected 1 hyperboloid for tag " + tag + ", got: " + hyperboloids.size());
       }
     }
   }
@@ -112,7 +120,10 @@ public class AngleModulator extends LXModulator implements LXOscComponent {
     float xv = 0f;
     float zv = 0f;
     int pointCount = 0;
-    List<LXModel> hyperboloids = lx.getModel().sub("H" + (hNum + 1));
+    List<LXModel> hyperboloids = lx.getModel().sub("h" + (hNum + 1));
+    if (hyperboloids.size() == 0) {
+      hyperboloids = lx.getModel().sub("H" + (hNum + 1));
+    }
     if (hyperboloids.size() == 1) {
       for (int stripNum = 0; stripNum < 16; stripNum++) {
         List<LXModel> stripModel = hyperboloids.get(0).sub("strip" + stripNum);
@@ -129,6 +140,7 @@ public class AngleModulator extends LXModulator implements LXOscComponent {
     }
     center[0] = xv;
     center[1] = zv;
+    LX.log("Hyperboid " + hNum + " center: " + xv + ", " + zv + " point count: " + pointCount);
   }
 
   protected float computeRadius() {
@@ -180,7 +192,10 @@ public class AngleModulator extends LXModulator implements LXOscComponent {
       if (hNum != whichHyperboloid && whichHyperboloid != -1)
         continue;
       // Hyperboloids are tagged with H1, H2, H3
-      List<LXModel> hyperboloids = lx.getModel().sub("H" + (hNum + 1));
+      List<LXModel> hyperboloids = lx.getModel().sub("h" + (hNum + 1));
+      if (hyperboloids.size() == 0) {
+        hyperboloids = lx.getModel().sub("H" + (hNum + 1));
+      }
       if (hyperboloids.size() == 1) {
         for (int stripNum = 0; stripNum < 16; stripNum++) {
           // Strips in each Hyperboloid are tagged with strip0, strip1, ..., strip15
