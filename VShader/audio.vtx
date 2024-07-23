@@ -35,8 +35,8 @@ uniform sampler2D audioTexture;
 layout(location = 0) in vec3 position;
 out vec3 outColor;
 
-#include <consts.vert>
-#include <uvwrap.vert>
+#include <consts.vti>
+#include <uvwrap.vti>
 
 void main(){
     vec2 st = uvwrap(position);

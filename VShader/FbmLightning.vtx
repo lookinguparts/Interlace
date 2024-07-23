@@ -88,10 +88,10 @@ uniform float pw;
 layout(location = 0) in vec3 position;
 out vec3 outColor;
 
-#include <palettes.vert>
-#include <sdf2d.vert>
-#include <consts.vert>
-#include <uvwrap.vert>
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
 
 
 mat2 Rot(float a) {

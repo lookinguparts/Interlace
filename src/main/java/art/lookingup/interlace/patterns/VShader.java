@@ -1,7 +1,6 @@
 package art.lookingup.interlace.patterns;
 
 import heronarts.glx.GLX;
-import heronarts.glx.ui.component.UIKnob;
 import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.model.LXPoint;
 import art.lookingup.util.GLUtil;
@@ -182,7 +181,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     String shaderSource = "";
 
     try {
-      shaderSource = GLUtil.loadShader(GLUtil.shaderDir(lx), shaderName + ".vert");
+      shaderSource = GLUtil.loadShader(GLUtil.shaderDir(lx), shaderName + ".vtx");
     } catch (Exception ex) {
       LX.log("Error loading shader: " + ex.getMessage());
     }

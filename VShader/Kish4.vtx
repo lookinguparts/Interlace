@@ -32,10 +32,10 @@ uniform float y1;
 layout(location = 0) in vec3 position;
 out vec3 outColor;
 
-#include <palettes.vert>
-#include <sdf2d.vert>
-#include <consts.vert>
-#include <uvwrap.vert>
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
 
 void main(){
     //vec2 uv = 2. * position.yz - 1.;// + 0.5; // + 0.5;

@@ -90,6 +90,11 @@ support for textures but that will be coming soon.  In order to render on the su
 see the coordinate space remapping example in ShpRings.vert.  The shaders support an #include <funcs.vert> directive for sharing
 common blocks of code.
 
+Due to some complications with tinyfd and AppleScript on Mac OS the vertex shader extensions
+are .vtx for a vertex shader and .vti for files that will be included by vertex shaders.  You
+probably want to set up IntelliJ IDEA to recognize these file extensions as GLSL files. You can
+do so by going to Settings -> Editor -> File Types and adding the extensions to the GLSL file type.
+
 
 Modular Audio/Visual Synthesis Guide
 ====================================

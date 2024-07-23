@@ -211,7 +211,7 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
     String shaderSource = "";
 
     try {
-      shaderSource = GLUtil.loadShader(GLUtil.shaderDir(lx), shaderName + ".vert");
+      shaderSource = GLUtil.loadShader(GLUtil.shaderDir(lx), shaderName + ".vtx");
     } catch (Exception ex) {
       LX.log("Error loading shader: " + ex.getMessage());
     }
