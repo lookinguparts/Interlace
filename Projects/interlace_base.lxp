@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "timestamp": 1721705487321,
+  "timestamp": 1721804139255,
   "model": {
     "id": 2,
     "class": "heronarts.lx.structure.LXStructure",
@@ -792,17 +792,17 @@
               "band-2": 0.0,
               "band-3": 0.0,
               "band-4": 0.0,
-              "band-5": 9.483745663164678E-4,
+              "band-5": 0.0,
               "band-6": 0.0,
               "band-7": 0.0,
               "band-8": 0.0,
               "band-9": 0.0,
               "band-10": 0.0,
-              "band-11": 0.10939705456643267,
-              "band-12": 0.10551266191938302,
-              "band-13": 0.01089340123286231,
-              "band-14": 0.1860450045513593,
-              "band-15": 0.007505008739331465,
+              "band-11": 0.0,
+              "band-12": 0.0,
+              "band-13": 0.0,
+              "band-14": 0.0,
+              "band-15": 0.0,
               "band-16": 0.0
             },
             "children": {}
@@ -821,7 +821,7 @@
           "label": "Mixer",
           "crossfader": 0.5,
           "crossfaderBlendMode": 0,
-          "focusedChannel": 3,
+          "focusedChannel": 1,
           "focusedChannelAux": 3,
           "cueA": false,
           "cueB": false,
@@ -972,7 +972,7 @@
               "label": "H1",
               "fader": 1.0,
               "arm": false,
-              "selected": false,
+              "selected": true,
               "enabled": true,
               "cue": false,
               "aux": false,
@@ -985,7 +985,7 @@
               "midiFilter/minVelocity": 1,
               "midiFilter/velocityRange": 127,
               "view": 1,
-              "compositeMode": 0,
+              "compositeMode": 1,
               "compositeDampingEnabled": true,
               "compositeDampingTimeSecs": 0.1,
               "autoCycleEnabled": false,
@@ -1030,8 +1030,8 @@
                   "compositeLevel": 1.0,
                   "hasCustomCycleTime": false,
                   "customCycleTimeSecs": 60.0,
-                  "color/brightness": 100.0,
-                  "color/saturation": 100.0,
+                  "color/brightness": 73.33333492279053,
+                  "color/saturation": 60.00000238418579,
                   "color/hue": 0.0,
                   "color/mode": 0,
                   "color/index": 1
@@ -1082,22 +1082,22 @@
                   "viewPriority": 0,
                   "enabled": true,
                   "recall": false,
-                  "compositeMode": 0,
+                  "compositeMode": 4,
                   "compositeLevel": 1.0,
                   "hasCustomCycleTime": false,
                   "customCycleTimeSecs": 60.0,
                   "scriptName": "FbmLightning",
-                  "speed": 0.2,
-                  "alfTh": 0.10000000149011612,
-                  "x": -0.3400000035762787,
-                  "y": 0.10000000149011612,
-                  "radius": -0.01724138855934143,
-                  "thick": 0.2655172420472933,
-                  "zoom": 0.8896550834178925,
-                  "brt": 4.7055172272977135,
+                  "speed": 0.4,
+                  "alfTh": 0.02413794090007916,
+                  "x": 0.0,
+                  "y": 0.0,
+                  "radius": 0.7431033932371065,
+                  "thick": -0.29586214803673205,
+                  "zoom": 1.9379308298230171,
+                  "brt": 5.5289654258972565,
                   "palval": 0.0,
                   "pald": 1.0,
-                  "pw": 0.724137932062149
+                  "pw": 0.689655180554837
                 },
                 "children": {
                   "modulation": {
@@ -1307,7 +1307,7 @@
               "label": "H3",
               "fader": 1.0,
               "arm": false,
-              "selected": true,
+              "selected": false,
               "enabled": true,
               "cue": false,
               "aux": false,
@@ -1421,11 +1421,18 @@
                   "compositeLevel": 1.0,
                   "hasCustomCycleTime": false,
                   "customCycleTimeSecs": 60.0,
-                  "scriptName": "Kish4",
+                  "scriptName": "LRings",
                   "speed": 1.0,
-                  "alfTh": 0.10000000149011612,
-                  "x1": 1.0,
-                  "y1": 0.0
+                  "alfTh": 0.09241379409932118,
+                  "s1": 0.04551723912293992,
+                  "s2": 0.21999988920986402,
+                  "radius": 1.4413791709812358,
+                  "thick": -0.09862060127329975,
+                  "zoom": 0.08275893703103065,
+                  "brt": 15.196550528459444,
+                  "palval": 6.144826883976847,
+                  "pald": 1.8620696058496833,
+                  "pw": 0.5172414043918252
                 },
                 "children": {
                   "modulation": {
@@ -1483,9 +1490,9 @@
               "midiFilter/noteRange": 128,
               "midiFilter/minVelocity": 1,
               "midiFilter/velocityRange": 127,
-              "angle1": 0.32799997739493847,
-              "angle2": 0.2719999812543392,
-              "angle3": 0.3200000412762165
+              "angle1": 0.5,
+              "angle2": 0.5,
+              "angle3": 0.5
             },
             "children": {}
           }
@@ -1590,7 +1597,7 @@
           "label": "OSC",
           "receiveHost": "127.0.0.1",
           "receivePort": 3030,
-          "receiveActive": false,
+          "receiveActive": true,
           "transmitHost": "localhost",
           "transmitPort": 3131,
           "transmitActive": false,
@@ -1621,22 +1628,22 @@
         "depth": 2.0,
         "camera": {
           "active": false,
-          "radius": 692.9839382184626,
-          "theta": 355.0204232931137,
-          "phi": 7.783510357141495,
-          "x": 0.0,
-          "y": 71.53125,
-          "z": 45.0
+          "radius": 480.1785459005483,
+          "theta": 109.82726436853409,
+          "phi": -9.666615188121796,
+          "x": 44.44491696357727,
+          "y": 144.88479083776474,
+          "z": -10.094156332314014
         },
         "cue": [
           {
             "active": false,
-            "radius": 692.9839382184626,
-            "theta": 355.0204232931137,
-            "phi": 7.783510357141495,
-            "x": 0.0,
-            "y": 71.53125,
-            "z": 45.0
+            "radius": 480.1785459005483,
+            "theta": 109.82726436853409,
+            "phi": -9.666615188121796,
+            "x": 44.44491696357727,
+            "y": 144.88479083776474,
+            "z": -10.094156332314014
           },
           {
             "active": false,
@@ -1706,8 +1713,8 @@
           "x": 0.0,
           "y": 0.0,
           "z": 0.0,
-          "neg1": false,
-          "neg2": false
+          "neg1": true,
+          "neg2": true
         },
         "axes": {
           "visible": false

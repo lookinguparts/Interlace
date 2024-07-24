@@ -68,17 +68,22 @@ public class AngleModulator extends LXModulator implements LXOscComponent {
 
   }
 
+  public static float paramValueToAngle(float value) {
+    float degrees = -130f + 260f * value;
+    return (float) Math.toRadians(degrees);
+  }
+
   @Override
   public void onStart() {
     super.onStart();
     angle1.addListener((p) -> {
-      updatePointPositions(0, ((float)Math.PI * 2f * p.getValuef()));
+      updatePointPositions(0, paramValueToAngle(p.getValuef()));
     });
     angle2.addListener((p) -> {
-      updatePointPositions(1, ((float)Math.PI * 2f * p.getValuef()));
+      updatePointPositions(1, paramValueToAngle(p.getValuef()));
     });
     angle3.addListener((p) -> {
-      updatePointPositions(2, ((float)Math.PI * 2f * p.getValuef()));
+      updatePointPositions(2, paramValueToAngle(p.getValuef()));
     });
     computeHyperboloidCenters();
     storeBottomPoints();
