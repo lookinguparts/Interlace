@@ -104,6 +104,25 @@ vec3 palette9(float t) {
     //return palette(t, a, b, c, d);
 }
 
+//
+// [[0.172 0.854 0.888] [0.406 0.606 0.068] [0.055 1.268 0.209] [4.175 2.384 2.380]]
+vec3 palette10(float t) {
+    vec3 a = vec3(0.172, 0.854, 0.888);
+    vec3 b = vec3(0.406, 0.606, 0.068);
+    vec3 c = vec3(0.055, 1.268, 0.209);
+    vec3 d = vec3(4.175, 2.384, 2.380);
+    return palette(t, a, b, c, d);
+}
+
+// red-pink-purple
+//[[0.992 0.070 0.258] [0.880 0.265 0.232] [0.677 0.325 0.802] [4.825 4.254 4.444]]
+vec3 palette11(float t) {
+    vec3 a = vec3(0.992, 0.070, 0.258);
+    vec3 b = vec3(0.880, 0.265, 0.232);
+    vec3 c = vec3(0.677, 0.325, 0.802);
+    vec3 d = vec3(4.825, 4.254, 4.444);
+    return palette(t, a, b, c, d);
+}
 
 
 // which palette to use.
@@ -129,5 +148,9 @@ vec3 paletteN(in float t, in float pal_num) {
     return palette8(t);
     if (pal_num == 9.)
     return palette9(t);
+    if (pal_num == 10.)
+            return palette10(t);
+    if (pal_num == 11.)
+            return palette11(t);
     return palette0(t);
 }

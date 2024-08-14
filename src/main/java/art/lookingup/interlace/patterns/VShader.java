@@ -289,8 +289,6 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     glDrawable.getContext().makeCurrent();
     updateLedPositions();
     gl.glBindBuffer(GL_ARRAY_BUFFER, bufferNames.get(Buffer.VERTEX));
-
-
     gl.glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * Float.BYTES, vertexBuffer, GL_STATIC_DRAW);
     int inputAttrib = gl.glGetAttribLocation(shaderProgramId, "position");
     gl.glEnableVertexAttribArray(inputAttrib);

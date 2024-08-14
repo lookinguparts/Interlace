@@ -37,4 +37,10 @@ public abstract class Wavetable {
             samples[n - i - 1] = temp;
         }
     }
+
+    public void multiply(Wavetable other) {
+        for (int i = 0; i < numSamples; i++) {
+            samples[i] *= other.samples[i];
+        }
+    }
 }
