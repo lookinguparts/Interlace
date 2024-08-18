@@ -1,0 +1,126 @@
+/*{
+	"DESCRIPTION": "ripple",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"VERTEX SDF"
+	],
+	"INPUTS": [
+         {
+            "NAME": "palval",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "pald",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "thick",
+            "TYPE": "float",
+            "DEFAULT": 0.35,
+            "MIN": 0.05,
+            "MAX": 1
+         },
+          {
+                     "NAME": "posx",
+                     "TYPE": "float",
+                     "DEFAULT": 1.0,
+                     "MIN": -2.0,
+                     "MAX": 2.0
+                  },
+                   {
+                              "NAME": "posy",
+                              "TYPE": "float",
+                              "DEFAULT": 0.0,
+                              "MIN": 0.0,
+                              "MAX": 2.0
+                           },
+                           {
+                                                "NAME": "zoomx",
+                                                "TYPE": "float",
+                                                "DEFAULT": 1.0,
+                                                "MIN": 0.1,
+                                                "MAX": 5.0
+                                             },
+                                              {
+                                                         "NAME": "zoomy",
+                                                         "TYPE": "float",
+                                                         "DEFAULT": 1.0,
+                                                         "MIN": 0.1,
+                                                         "MAX": 5.0
+                                                      },
+                                                      {
+                                                                                                               "NAME": "freq",
+                                                                                                               "TYPE": "float",
+                                                                                                               "DEFAULT": 5.0,
+                                                                                                               "MIN": 0.1,
+                                                                                                               "MAX": 20.0
+                                                                                                            },
+          {
+                     "NAME": "pw",
+                     "TYPE": "float",
+                     "DEFAULT": 0.3,
+                     "MIN": 0.05,
+                     "MAX": 5
+                  }
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float palval;
+uniform float pald;
+uniform float thick;
+uniform float pw;
+uniform float posx;
+uniform float posy;
+uniform float zoomx;
+uniform float zoomy;
+uniform float freq;
+
+
+
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
+
+
+
+//void main() {
+//    vec2 uv = position.xy;
+//    outColor = paletteN(uv.x * pald + fTime*palspd, palval);
+//}
+
+void main(void)
+{
+    vec2 uv = uvwrap(position);
+    uv = 2.*uv - 1.;
+    uv.x *= zoomx;
+    uv.y *= zoomy;
+    uv.x += posx;
+    uv.y += posy;
+    float d = length(uv);
+    d = .5*sin(d * 3.14 * freq - fTime) + .5;
+
+    float th = thick;
+    th = 0.1 + thick * abs(uv.x);
+
+    d = th/d;
+    d = pow(d, pw);
+    d = clamp(d, 0.1, 1.);
+
+    outColor = d * paletteN(d * pald, palval);
+    clamp(outColor, 0., 1.);
+}

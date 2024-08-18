@@ -23,7 +23,9 @@ public abstract class Wavetable {
     }
 
     public float getSample(float position, float physicalWidth) {
-        int index = (int) ((position+physicalWidth/2f - this.pos)/ physicalWidth * numSamples);
+        //int index = (int) ((position+physicalWidth/2f - this.pos)/ physicalWidth * numSamples);
+        //int index = Math.round((position + physicalWidth / 2f - this.pos) * numSamples / physicalWidth);
+        int index = Math.round((position + physicalWidth / 2f) * (float)numSamples / physicalWidth);
         if (index < 0 || index >= numSamples)
             return 0;
         return samples[index];

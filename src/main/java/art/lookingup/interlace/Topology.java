@@ -71,6 +71,15 @@ public class Topology {
     if (hyperboloids.size() == 1) {
       return hyperboloids.get(0);
     }
+    if (hyperboloids.size() == 0) {
+      hyperboloids = lx.getModel().sub("h" + which);
+      if (hyperboloids.size() == 1) {
+        return hyperboloids.get(0);
+      }
+      LX.log("No Hyperboloid found in model for H or h" + which);
+    } else {
+      LX.log("Multiple Hyperboloids found in model for H" + which);
+    }
     return null;
   }
 

@@ -161,7 +161,8 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
 
     VShader.glDrawable.getContext().makeCurrent();
     gl = VShader.glDrawable.getGL().getGL3();
-    vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
+    vertexBuffer = FloatBuffer.wrap(ledPositions);
+    //vertexBuffer = GLBuffers.newDirectFloatBuffer(ledPositions);
 
     // This is just a destination, make it large enough to accept all the vertex data.  The vertex
     // shader always outputs the all the elements.  To return just some of the points, attach a
@@ -356,6 +357,8 @@ public class VShaderTex extends LXPattern implements UIDeviceControls<VShaderTex
     totalTime += deltaMs/1000.0;
     VShader.glDrawable.getContext().makeCurrent();
     updateAudioTexture();
+    updateLedPositions();
+
     gl.glBindBuffer(GL_ARRAY_BUFFER, bufferNames.get(Buffer.VERTEX));
     gl.glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * Float.BYTES, vertexBuffer, GL_STATIC_DRAW);
     int inputAttrib = gl.glGetAttribLocation(shaderProgramId, "position");

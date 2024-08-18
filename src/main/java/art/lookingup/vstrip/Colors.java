@@ -86,6 +86,12 @@ public final class Colors {
     return Color.RGBtoHSB(r, g, b, hsb);
   }
 
+  public static void colorToRGBArrayNormalized(int color, float[] rgb) {
+    rgb[0] = (float)red(color) / 255.0f;
+    rgb[1] = (float)green(color) / 255.0f;
+    rgb[2] = (float)blue(color) / 255.0f;
+  }
+
   public static int HSBtoRGB(float[] hsb) {
     return Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
   }

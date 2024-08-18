@@ -101,6 +101,10 @@ public class Point3D {
     z -= p.z;
   }
 
+  public String toString() {
+    return "(" + x + ", " + y + ", " + z + ")";
+  }
+
   public float x;
   public float y;
   public float z;

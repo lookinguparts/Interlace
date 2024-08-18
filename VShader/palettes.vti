@@ -1,7 +1,8 @@
 // http://dev.thi.ng/gradients/
 vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d)
 {
-    return a + b*cos(6.28318* (c*t + d));
+    //t = clamp(t, 0.0, 1.0);
+    return clamp(a + b*cos(6.28318* (c*t + d)), 0.0, 1.0);
 }
 
 
@@ -124,6 +125,89 @@ vec3 palette11(float t) {
     return palette(t, a, b, c, d);
 }
 
+// orange purple yellow
+// [[0.774 0.747 0.103] [0.049 0.381 0.939] [1.283 0.442 0.834] [5.031 4.499 2.707]]
+vec3 palette12(float t) {
+    vec3 a = vec3(0.774, 0.747, 0.103);
+    vec3 b = vec3(-0.592, 0.381, 0.468);
+    vec3 c = vec3(1.008, 1.008, 0.834);
+    vec3 d = vec3(5.031, 4.499, 2.707);
+    return palette(t, a, b, c, d);
+}
+
+// [[0.774 0.747 0.103] [-0.592 0.381 0.918] [1.000 2.028 0.834] [3.138 4.499 2.518]]
+vec3 palette13(float t) {
+       vec3 a = vec3(0.774, 0.747, 0.103);
+       vec3 b = vec3(-0.592, 0.381, 0.918);
+       vec3 c = vec3(1.000, 2.028, 0.834);
+       vec3 d = vec3(3.138, 4.499, 2.518);
+       return palette(t, a, b, c, d);
+}
+
+// [[0.221 0.244 0.811] [0.468 0.998 0.518] [1.988 0.637 1.003] [1.481 2.788 3.864]]
+vec3 palette14(float t) {
+       vec3 a = vec3(0.221, 0.244, 0.811);
+       vec3 b = vec3(0.468, 0.998, 0.518);
+       vec3 c = vec3(1.988, 0.637, 1.003);
+       vec3 d = vec3(1.481, 2.788, 3.864);
+       return palette(t, a, b, c, d);
+}
+
+// [[0.028 1.004 0.417] [0.971 0.737 0.114] [2.338 0.290 0.360] [5.994 4.342 4.865]]
+vec3 palette15(float t) {
+       vec3 a = vec3(0.028, 1.004, 0.417);
+       vec3 b = vec3(0.971, 0.737, 0.114);
+       vec3 c = vec3(2.338, 0.290, 0.360);
+       vec3 d = vec3(5.994, 4.342, 4.865);
+       return palette(t, a, b, c, d);
+}
+
+// [[0.028 0.918 0.558] [0.971 0.737 0.114] [2.298 2.518 0.360] [5.994 4.342 4.865]]
+vec3 palette16(float t) {
+       vec3 a = vec3(0.028, 0.918, 0.558);
+       vec3 b = vec3(0.971, 0.737, 0.114);
+       vec3 c = vec3(2.298, 2.518, 0.360);
+       vec3 d = vec3(5.994, 4.342, 4.865);
+       return palette(t, a, b, c, d);
+}
+
+// [[0.410 0.681 1.098] [0.510 0.975 0.478] [1.483 2.918 2.208] [0.942 0.462 1.724]][[0.410 0.681 1.098] [0.510 0.975 0.478] [1.483 2.918 2.208] [0.942 0.462 1.724]]
+vec3 palette17(float t) {
+       vec3 a = vec3(0.410, 0.681, 1.098);
+       vec3 b = vec3(0.510, 0.975, 0.478);
+       vec3 c = vec3(1.483, 2.918, 2.208);
+       vec3 d = vec3(0.942, 0.462, 1.724);
+       return palette(t, a, b, c, d);
+}
+
+// [[0.638 0.148 0.153] [0.285 0.693 0.338] [0.678 1.808 2.028] [4.993 3.681 5.919]]
+vec3 palette18(float t) {
+       vec3 a = vec3(0.638, 0.148, 0.153);
+       vec3 b = vec3(0.285, 0.693, 0.338);
+       vec3 c = vec3(0.678, 1.808, 2.028);
+       vec3 d = vec3(4.993, 3.681, 5.919);
+       return palette(t, a, b, c, d);
+   }
+
+// [[0.410 -0.141 0.317] [0.834 0.877 0.244] [1.366 0.947 1.530] [0.150 4.830 5.551]]
+vec3 palette19(float t) {
+       vec3 a = vec3(0.410, -0.141, 0.317);
+       vec3 b = vec3(0.834, 0.877, 0.244);
+       vec3 c = vec3(1.366, 0.947, 1.530);
+       vec3 d = vec3(0.150, 4.830, 5.551);
+       return palette(t, a, b, c, d);
+}
+
+// [[0.335 0.297 0.094] [0.924 0.647 0.219] [1.295 0.859 0.341] [4.705 5.682 2.882]]
+vec3 palette20(float t) {
+       vec3 a = vec3(0.335, 0.297, 0.094);
+       vec3 b = vec3(0.924, 0.647, 0.219);
+       vec3 c = vec3(1.295, 0.859, 0.341);
+       vec3 d = vec3(4.705, 5.682, 2.882);
+       return palette(t, a, b, c, d);
+}
+
+
 
 // which palette to use.
 vec3 paletteN(in float t, in float pal_num) {
@@ -149,8 +233,26 @@ vec3 paletteN(in float t, in float pal_num) {
     if (pal_num == 9.)
     return palette9(t);
     if (pal_num == 10.)
-            return palette10(t);
+      return palette10(t);
     if (pal_num == 11.)
-            return palette11(t);
+      return palette11(t);
+    if (pal_num == 12.)
+      return palette12(t);
+    if (pal_num == 13.)
+      return palette13(t);
+    if (pal_num == 14.)
+      return palette14(t);
+    if (pal_num == 15.)
+      return palette15(t);
+    if (pal_num == 16.)
+      return palette13(t);
+    if (pal_num == 17.)
+      return palette17(t);
+    if (pal_num == 18.)
+      return palette18(t);
+    if (pal_num == 19.)
+      return palette19(t);
+    if (pal_num == 20.)
+        return palette20(t);
     return palette0(t);
 }

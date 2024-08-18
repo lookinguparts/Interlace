@@ -22,7 +22,7 @@ public class CosPaletteModulator extends LXModulator implements LXOscComponent, 
   public final CompoundParameter input =
     new CompoundParameter("Input", 0)
       .setUnits(CompoundParameter.Units.PERCENT_NORMALIZED)
-      .setDescription("Input value to the smoother");
+      .setDescription("Input value to the palette");
 
   public final DiscreteParameter which =
     new DiscreteParameter("Palette", 0, 0, paletteStrings.length)
@@ -81,7 +81,8 @@ public class CosPaletteModulator extends LXModulator implements LXOscComponent, 
 
   @Override
   public LXNormalizedParameter setNormalized(double value) {
-    throw new UnsupportedOperationException("May not setNormalized() on Smoother");
+    input.setValue(value);
+    return input;
   }
 
   @Override

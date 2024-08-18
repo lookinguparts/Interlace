@@ -24,7 +24,7 @@ public class Flarelet {
     public float initSpeed = 1f;
     public List<DStrip> prevDStrips = new ArrayList<>();
     public List<DStrip> nextDStrips = new ArrayList<>();
-    public int color = LXColor.rgba(255, 255, 255, 255);
+    public int color = LXColor.WHITE;
     // Whether the flarelet is enabled or not.  If not enabled, it will not render.
     public boolean enabled = true;
     // The intensity of the flarelet.  This is a multiplier that can be used to adjust the intensity of the flarelet.
@@ -49,6 +49,10 @@ public class Flarelet {
 
     // Which palette swatch to use for the flarelet.
     public int swatch = -1;
+
+    public boolean bright = false;
+    public float pow = 1f;
+    public float brt = 0.1f;
 
     public LX lx;
 
@@ -172,7 +176,7 @@ public class Flarelet {
                     renderWavetable(colors, prevDStrip, curWtPos, color, blend);
 
                     if (fx == 1) {
-                        VStripRender.randomGrayBaseDepth(colors, prevDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
+                        VStripRender.randomGrayBaseDepth(colors, prevDStrip.vStrip, pos, waveWidth, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
                           (int) (255 * fxDepth));
                     } else if (fx == 2) {
                         VStripRender.cosine2(colors, prevDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
@@ -187,7 +191,7 @@ public class Flarelet {
         renderWavetable(colors, dStrip, pos, color, blend);
 
         if (fx == 1) {
-            VStripRender.randomGrayBaseDepth(colors, dStrip.vStrip, LXColor.Blend.MULTIPLY, (int)(255*(1f - fxDepth)),
+            VStripRender.randomGrayBaseDepth(colors, dStrip.vStrip, pos, waveWidth, LXColor.Blend.MULTIPLY, (int)(255*(1f - fxDepth)),
                     (int)(255*fxDepth));
         } else if (fx == 2) {
             VStripRender.cosine(colors, dStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
@@ -207,7 +211,7 @@ public class Flarelet {
                     curWtPos = curWtPos - nextDStrip.vStrip.length();
                     renderWavetable(colors, nextDStrip, curWtPos, color, blend);
                     if (fx == 1) {
-                        VStripRender.randomGrayBaseDepth(colors, nextDStrip.vStrip, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
+                        VStripRender.randomGrayBaseDepth(colors, nextDStrip.vStrip, pos, waveWidth, LXColor.Blend.MULTIPLY, (int) (255 * (1f - fxDepth)),
                           (int) (255 * fxDepth));
                     } else if (fx == 2) {
                         VStripRender.cosine(colors, nextDStrip.vStrip, pos, fxFreq, 0f, 1f - fxDepth, fxDepth, LXColor.Blend.MULTIPLY);
@@ -224,8 +228,8 @@ public class Flarelet {
         renderWavetable(colors, dStrip, pos, color, blend);
     }
 
-    public float[] renderWavetable(int[] colors, DStrip targetDStrip, float pos, int color, LXColor.Blend blend) {
+    public void renderWavetable(int[] colors, DStrip targetDStrip, float pos, int color, LXColor.Blend blend) {
         //lx.log("Flarelet renderWavetable at pos: " + pos + " width=" + waveWidth + " color=" + color + " dStrip=" + targetDStrip.vStrip.id);
-        return VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, waveWidth, color, swatch, getFadeLevel(), blend);
+        VStripRender.renderWavetable(colors, targetDStrip.vStrip, wavetable, pos, waveWidth, color, swatch, getFadeLevel(), blend, bright, pow, brt);
     }
 }

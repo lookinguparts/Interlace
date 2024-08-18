@@ -1,0 +1,56 @@
+/*{
+	"DESCRIPTION": "palviz",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"VERTEX SDF"
+	],
+	"INPUTS": [
+         {
+            "NAME": "palval",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "pald",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "palspd",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         }
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float palval;
+uniform float pald;
+uniform float palspd;
+
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
+
+
+void main() {
+    vec2 uv = uvwrap(position);
+    float uvscale = palspd;
+
+    float x = uv.x + fTime;
+    outColor = paletteN(x, palval);
+}

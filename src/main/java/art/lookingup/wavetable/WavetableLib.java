@@ -32,8 +32,8 @@ public class WavetableLib {
     wavetable.generateWavetable(1f, 0f);
     sharedWavetables[4] = wavetable;
 
-    wavetable = new PerlinWavetable(samples, 1, pscale);
-    wavetable.generateWavetable(1f, 0f);
+    wavetable = new PerlinWavetable(samples, 1, pscale * 20f);
+    wavetable.generateWavetable(1f, 0.6f);
     sharedWavetables[5] = wavetable;
 
     wavetable = new StepDecayWavetable(samples, 2, samples - 2, forward);
@@ -56,7 +56,7 @@ public class WavetableLib {
   }
 
   static public void buildDefaultTables() {
-    int samples = 128;
+    int samples = 1024;
     buildWavetables(samples, samples/2, 1.0f, true);
   }
 

@@ -1,0 +1,142 @@
+/*{
+	"DESCRIPTION": "rotlines",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"VERTEX SDF"
+	],
+	"INPUTS": [
+         {
+            "NAME": "palval",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "pald",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "spacing",
+            "TYPE": "float",
+            "DEFAULT": 0.3,
+            "MIN": 0.05,
+            "MAX": 1
+         },
+         {
+                                                                  "NAME": "angle",
+                                                                  "TYPE": "float",
+                                                                  "DEFAULT": 0.0,
+                                                                  "MIN": 0.0,
+                                                                  "MAX": 1.0
+                                                               },
+          {
+                     "NAME": "posx",
+                     "TYPE": "float",
+                     "DEFAULT": 1.0,
+                     "MIN": -2.0,
+                     "MAX": 2.0
+                  },
+                   {
+                              "NAME": "posy",
+                              "TYPE": "float",
+                              "DEFAULT": 0.0,
+                              "MIN": -2.0,
+                              "MAX": 2.0
+                           },
+                           {
+                                                "NAME": "zoomx",
+                                                "TYPE": "float",
+                                                "DEFAULT": 1.0,
+                                                "MIN": 0.1,
+                                                "MAX": 5.0
+                                             },
+                                              {
+                                                         "NAME": "zoomy",
+                                                         "TYPE": "float",
+                                                         "DEFAULT": 1.0,
+                                                         "MIN": 0.1,
+                                                         "MAX": 5.0
+                                                      },
+          {
+                     "NAME": "pw",
+                     "TYPE": "float",
+                     "DEFAULT": 0.3,
+                     "MIN": 0.05,
+                     "MAX": 50
+                  }
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float palval;
+uniform float pald;
+uniform float spacing;
+uniform float pw;
+uniform float posx;
+uniform float posy;
+uniform float zoomx;
+uniform float zoomy;
+uniform float angle;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
+
+
+//void main() {
+//    vec2 uv = position.xy;
+//    outColor = paletteN(uv.x * pald + fTime*palspd, palval);
+//}
+
+mat2 Rot(float a) {
+    float s=sin(a), c=cos(a);
+    return mat2(c, -s, s, c);
+}
+
+void main(void)
+{
+    vec2 uv = uvwrap(position);
+    uv = 2.*uv - 1.;
+    uv.x *= zoomx;
+    uv.y *= zoomy;
+    uv.x += posx;
+    uv.y += posy;
+
+
+        uv = uv * Rot(fTime + angle * M_PI * 2.);
+        float dy = 1. - abs(uv.y);
+        dy = max(dy, 1. - abs(uv.y - spacing));
+        dy = max(dy, 1. - abs(uv.y + spacing));
+        dy = max(dy, 1. - abs(uv.y - spacing * 2.));
+        dy = max(dy, 1. - abs(uv.y + spacing * 2.));
+        //dy = max(dy, 1. - abs(uv.y - spacing * 3.));
+        //dy = max(dy, 1. - abs(uv.y + spacing * 3.));
+        //dy = max(dy, 1. - abs(uv.y - spacing * 4.));
+        //dy = max(dy, 1. - abs(uv.y + spacing * 4.));
+
+        float dx = 1. - abs(uv.x);
+        dx = max(dx, 1. - abs(uv.x - spacing));
+        dx = max(dx, 1. - abs(uv.x + spacing));
+        dx = max(dx, 1. - abs(uv.x - spacing * 2.));
+        dx = max(dx, 1. - abs(uv.x + spacing * 2.));
+        //dx = max(dx, 1. - abs(uv.x - spacing * 3.));
+        //dx = max(dx, 1. - abs(uv.x + spacing * 3.));
+        //dx = max(dx, 1. - abs(uv.x - spacing * 4.));
+        //dx = max(dx, 1. - abs(uv.x + spacing * 4.));
+        float d = max(dy, dx);
+        d = pow(d, pw);
+
+    outColor = d * paletteN(d * pald, palval);
+    clamp(outColor, 0., 1.);
+}

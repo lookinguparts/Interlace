@@ -1,5 +1,6 @@
 package art.lookingup.vstrip;
 
+import art.lookingup.interlace.modulator.CosPaletteModulator;
 import art.lookingup.util.LXUtil;
 import art.lookingup.wavetable.Wavetable;
 import heronarts.lx.color.LXColor;
@@ -23,7 +24,7 @@ public class VStripRender {
         }
     }
 
-    static public void randomGrayBaseDepth(int colors[], VStrip vStrip, LXColor.Blend blend, int min, int depth) {
+    static public void randomGrayBaseDepth(int colors[], VStrip vStrip, float pos, float width, LXColor.Blend blend, int min, int depth) {
         for (LVPoint pt : vStrip.points) {
             if (depth < 0)
                 depth = 0;
@@ -32,7 +33,9 @@ public class VStripRender {
             if (value > 255) {
                 value = 255;
             }
-            colors[pt.p.index] = LXColor.blend(colors[pt.p.index], LXColor.rgba(value, value, value, 255), blend);
+            if (pt.xpos > pos - width / 2.0f && pt.xpos < pos + width / 2.0f) {
+                colors[pt.p.index] = LXColor.blend(colors[pt.p.index], LXColor.rgba(value, value, value, 255), blend);
+            }
         }
     }
 
@@ -63,34 +66,75 @@ public class VStripRender {
         }
     }
 
+    static public void renderWavetable(int colors[], VStrip vStrip, Wavetable wt, float pos, float width, int clr, int swatch, float intensity, LXColor.Blend blend, boolean bright, float pow, float brt) {
+        renderWavetable(colors, vStrip, wt, pos, width, clr, swatch, intensity, blend, false, bright, pow, brt);
+    }
+
+
+    static public float[] tempRGB = new float[3];
     /**
      * Render a wavetable value at the specified position with the specified width.
      */
-    static public float[] renderWavetable(int colors[], VStrip vStrip, Wavetable wt, float pos, float width, int clr, int swatch, float intensity, LXColor.Blend blend) {
-        float[] minMax = new float[2];
-        minMax[0] = pos - width/2.0f;
-        minMax[1] = pos + width/2.0f;
+    static public void renderWavetable(int colors[], VStrip vStrip, Wavetable wt, float pos, float width, int clr, int swatch, float intensity, LXColor.Blend blend, boolean invert, boolean bright, float pow, float brt) {
         // LXUtil.lx().log("VStripRender renderWavetable pos=" + pos + " width=" + width + " minMax[0]=" + minMax[0] + " minMax[1]=" + minMax[1] + " intensity=" + intensity);
         for (LVPoint pt : vStrip.points) {
             //float val = wt.getSample((pt.xpos - minMax[0])/(minMax[1] - minMax[0]), width);
             float val = wt.getSample(pt.xpos - pos, width);
             // Palette translation?
             if (swatch != -1) {
-                // clr = Colors.getQuantizedPaletteColor(LXUtil.lx(), swatch, val, null);
                 clr = Colors.getParameterizedPaletteColor(LXUtil.lx(), swatch, val, null);
+                //CosPaletteModulator.paletteN(palInputVal, palette, tempRGB);
             }
-            val = val * intensity;
+
+            if (invert) {
+                val = 1.0f - val;
+            }
+            if (val > 1f)
+                val = 1f;
+            if (val < 0f)
+                val = 0f;
+            //if (bright) {
+
+            float origval = val;
+            if (bright) {
+                // Use 1/d calculations.
+                val = 1f - val;
+                float dist = val;
+                if (val != 0f) {
+                    val = brt/val;
+                } else {
+                    val = 1000f;
+                }
+                if (dist >= 1f)
+                    val = 0f;
+                val = (float)Math.pow(val, pow);
+                Colors.colorToRGBArrayNormalized(clr, tempRGB);
+                tempRGB[0] = val * tempRGB[0];
+                if (tempRGB[0] > 1f) {
+                    tempRGB[0] = 1f;
+                }
+                tempRGB[1] = val * tempRGB[1];
+                if (tempRGB[1] > 1f) {
+                    tempRGB[1] = 1f;
+                }
+                tempRGB[2] = val * tempRGB[2];
+                if (tempRGB[2] > 1f) {
+                    tempRGB[2] = 1f;
+                }
+                // Rescale by the original intensity so the triangle wave brightness falls off for example.
+                int color2 = LXColor.rgb((int)(tempRGB[0]*255f*origval), (int)(tempRGB[1]*255f*origval), (int)(tempRGB[2]*255f*origval));
+                clr = color2;
+                val = intensity; // set it back to intensity.
+            } else {
+                // For non-bright mode, just scale by intensity, which will be the fadelevel.
+                val = val * intensity;
+            }
             colors[pt.p.index] = LXColor.blend(colors[pt.p.index],
                     LXColor.rgba((int)(((int)Colors.red(clr))*val),
                             (int)(((int)Colors.green(clr))*val),
                             (int)(((int)Colors.blue(clr))*val), 255), blend);
-            //colors[pt.p.index] =
-            //  LXColor.rgba((int)(((int)Colors.red(clr))*val),
-            //    (int)(((int)Colors.green(clr))*val),
-            //    (int)(((int)Colors.blue(clr))*val), 255);
-            //colors[pt.p.index] = LXColor.scaleBrightness(clr, val);
         }
-        return minMax;
+        //return minMax;
     }
 
     /**

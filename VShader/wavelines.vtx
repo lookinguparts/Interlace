@@ -1,0 +1,96 @@
+/*{
+	"DESCRIPTION": "wavelines",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"VERTEX SDF"
+	],
+	"INPUTS": [
+         {
+            "NAME": "palval",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "pald",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "palspd",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+                     "NAME": "rotspd",
+                     "TYPE": "float",
+                     "DEFAULT": 1.0,
+                     "MIN": 0.0,
+                     "MAX": 20.0
+                  }
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float palval;
+uniform float pald;
+uniform float palspd;
+uniform float rotspd;
+
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
+
+float cosine_wave(vec2 uv, float amplitude, float freq, float phase) {
+    float yoffset = cos(uv.x*M_PI*freq + phase)*amplitude;
+    float d = yoffset;
+    d = uv.y - yoffset;
+    float d2 = uv.y - yoffset*.9;
+    d =  d * d2;
+    d = 1. - d;
+    return d;
+}
+
+void main()
+{
+    vec2 uv = -1. + 2. * uvwraprot(position, fTime * rotspd);
+    float d = 0.0;
+    float zoomval = 1.0;
+    uv = uv * zoomval;
+    float amplitude = 0.8; abs(1.-abs(uv.x));
+    amplitude *= amplitude;
+    float finalamp = 0.7;
+    amplitude = amplitude*finalamp;
+    float pw = 1.;
+    float freq= 1.;
+    float ctime = fTime;
+
+    vec2 myuv = uv * 8.;
+    d = cosine_wave(myuv, amplitude, freq*uv.x, ctime*2.);
+    vec2 myuv2 = myuv - vec2(0, 4.);
+    d = max(d, cosine_wave(myuv2, amplitude*4., freq*uv.x, ctime*2.));
+
+    vec2 myuv3 = myuv - vec2(0, -4.);
+    d = max(d, cosine_wave(myuv3, amplitude*4., freq*uv.x, ctime*2.));
+
+    d = clamp(d, 0., 1.);
+    float clampd = d;
+    d = 1 - d;
+    d = 0.1/d;
+    d = pow(d, pw);
+
+    outColor = clamp(paletteN(clampd, palval) * d, 0., 1.);
+}

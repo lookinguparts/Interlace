@@ -53,6 +53,8 @@
 
 #version 330
 
+#include <uvwrap.vti>
+
 uniform float fTime;
 uniform float x;
 uniform float y;
@@ -66,7 +68,6 @@ out vec3 outColor;
 
 
 void main() {
-    vec3 fragColor = vec3((position.x - x) * xscl, (position.y-y) * yscl, (position.z-z) * zscl);
-
-    outColor = vec3(clamp(abs(fragColor.x), 0.0, 1.0), clamp(abs(fragColor.y), 0.0, 1.0), clamp(abs(fragColor.z), 0.0, 1.0));
+    uv = uvwrap(position);
+    outColor = vec3(uv.x, uv.y, 0.0);
 }

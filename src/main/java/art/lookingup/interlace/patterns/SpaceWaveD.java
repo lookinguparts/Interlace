@@ -6,6 +6,7 @@ import art.lookingup.wavetable.*;
 import heronarts.lx.LX;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.model.LXPoint;
+import heronarts.lx.parameter.BooleanParameter;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.DiscreteParameter;
 import heronarts.lx.pattern.LXPattern;
@@ -24,7 +25,7 @@ public class SpaceWaveD extends LXPattern {
     .setDescription("Z component of direction vector");
   protected CompoundParameter speed = new CompoundParameter("speed", 1, 0, 10)
     .setDescription("Speed of plane movement");
-  protected CompoundParameter width = new CompoundParameter("width", 0.2, 0, 2)
+  protected CompoundParameter width = new CompoundParameter("width", 0.2, 0, 10)
     .setDescription("Width of the wave");
 
   protected CompoundParameter planePos = new CompoundParameter("pos", 0, -2, 2)
@@ -35,6 +36,10 @@ public class SpaceWaveD extends LXPattern {
 
   protected CompoundParameter paletteDensity = new CompoundParameter("pald", 1, 0, 5)
     .setDescription("Density of the palette");
+
+  protected CompoundParameter paletteOffset = new CompoundParameter("paloff", 0, 0, 1)
+    .setDescription("Offset of the palette");
+
   protected DiscreteParameter whichPal = new DiscreteParameter("pal", 0, 0, CosPaletteModulator.paletteStrings.length)
     .setDescription("Which palette to use");
 
@@ -43,6 +48,9 @@ public class SpaceWaveD extends LXPattern {
 
   protected CompoundParameter pow = new CompoundParameter("pw", 1, 0, 5)
     .setDescription("Pow of the value");
+
+  protected BooleanParameter alpha = new BooleanParameter("alpha", false)
+    .setDescription("Alpha channel");
 
   Point3D normalVector = new Point3D(0, 1, 0);
   Point3D planePoint = new Point3D(0, 0, 0);
@@ -58,12 +66,22 @@ public class SpaceWaveD extends LXPattern {
     addParameter("pos", planePos);
     addParameter("pal", whichPal);
     addParameter("pald", paletteDensity);
+    addParameter("paloff", paletteOffset);
     addParameter("pw", pow);
     addParameter("brt", brt);
     addParameter("wave", wave);
+    addParameter("alpha", alpha);
   }
 
   protected double[] tempRGB = new double[3];
+
+  static public boolean shownExtents = false;
+  static public float maxX = 0;
+  static public float maxY = 0;
+  static public float maxZ = 0;
+  static public float minX = 0;
+  static public float minY = 0;
+  static public float minZ = 0;
 
   public void run(double deltaMs) {
     normalVector.x = dirX.getValuef();
@@ -77,6 +95,26 @@ public class SpaceWaveD extends LXPattern {
     planePoint.y = normalVector.y * planePos.getValuef();
     planePoint.z = normalVector.z * planePos.getValuef();
     for (LXPoint p : model.points) {
+      if (!shownExtents) {
+        if (p.xn > maxX) {
+          maxX = p.xn;
+        }
+        if (p.yn > maxY) {
+          maxY = p.yn;
+        }
+        if (p.zn > maxZ) {
+          maxZ = p.zn;
+        }
+        if (p.xn < minX) {
+          minX = p.xn;
+        }
+        if (p.yn < minY) {
+          minY = p.yn;
+        }
+        if (p.zn < minZ) {
+          minZ = p.zn;
+        }
+      }
       lightPoint.x = p.xn;
       lightPoint.y = p.yn;
       lightPoint.z = p.zn;
@@ -84,7 +122,7 @@ public class SpaceWaveD extends LXPattern {
       //distance = Math.abs(distance);
       //distance = 1f - distance;
       float val = WavetableLib.getLibraryWavetable(wave.getValuei()).getSample((float)distance, width.getValuef());
-      float palInputVal = val * paletteDensity.getValuef();
+      float palInputVal = (val + paletteOffset.getValuef()) * paletteDensity.getValuef();
       CosPaletteModulator.paletteN(palInputVal, whichPal.getValuei(), tempRGB);
       val = 1f - val;
       if (val != 0f) {
@@ -111,8 +149,19 @@ public class SpaceWaveD extends LXPattern {
       }
 
       int color = LXColor.rgb((int)(tempRGB[0]*255), (int)(tempRGB[1]*255), (int)(tempRGB[2]*255));
-      //color = LXColor.scaleBrightness(color, val);
-      colors[p.index] = color;
+      if (alpha.isOn()) {
+        if (val > 1f)
+          val = 1f;
+        int alpha = (int)(val * 255);
+        color = LXColor.rgba(LXColor.red(color), LXColor.green(color), LXColor.blue(color), alpha);
+        colors[p.index] = color;
+      } else {
+        colors[p.index] = color;
+      }
+    }
+    if (!shownExtents) {
+      LX.log("SpaceWaveD extents: minX: " + minX + " maxX: " + maxX + " minY: " + minY + " maxY: " + maxY + " minZ: " + minZ + " maxZ: " + maxZ);
+      shownExtents = true;
     }
   }
 

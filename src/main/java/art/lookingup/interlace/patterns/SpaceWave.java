@@ -5,6 +5,7 @@ import art.lookingup.wavetable.*;
 import heronarts.lx.LX;
 import heronarts.lx.color.LXColor;
 import heronarts.lx.model.LXPoint;
+import heronarts.lx.parameter.BooleanParameter;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.pattern.LXPattern;
 
@@ -28,6 +29,9 @@ public class SpaceWave extends LXPattern {
   protected CompoundParameter planePos = new CompoundParameter("pos", 0, -2, 2)
     .setDescription("Position of the plane along the direction vector relative to origin.");
 
+  protected BooleanParameter alpha = new BooleanParameter("alpha", false)
+    .setDescription("Alpha channel");
+
   Point3D normalVector = new Point3D(0, 1, 0);
   Point3D planePoint = new Point3D(0, 0, 0);
   Point3D lightPoint = new Point3D(0, 0, 0);
@@ -44,6 +48,7 @@ public class SpaceWave extends LXPattern {
     addParameter("speed", speed);
     addParameter("width", width);
     addParameter("pos", planePos);
+    addParameter("alpha", alpha);
     sineWave = new StepDecayWavetable(64, 4, 60, true);
     //sineWave = new PerlinWavetable(64, 1, 20f);
     //sineWave = new StepWavetable(64);
