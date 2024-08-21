@@ -1,0 +1,230 @@
+{
+  "label": "Hyperboloid6032",
+  "tag": "Hyperboloid6032",
+  "components": [
+    {
+      "type": "strip",
+      "tag": "strip0",
+      "x": 0.0,
+      "y": 0,
+      "z": 32.0,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip1",
+      "x": 12.245869835682873,
+      "y": 0,
+      "z": 29.564145040361176,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip2",
+      "x": 22.627416997969522,
+      "y": 0,
+      "z": 22.627416997969522,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip3",
+      "x": 29.564145040361176,
+      "y": 0,
+      "z": 12.245869835682875,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip4",
+      "x": 32.0,
+      "y": 0,
+      "z": 1.959434878635765e-15,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip5",
+      "x": 29.564145040361176,
+      "y": 0,
+      "z": -12.245869835682871,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip6",
+      "x": 22.627416997969522,
+      "y": 0,
+      "z": -22.62741699796952,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip7",
+      "x": 12.245869835682877,
+      "y": 0,
+      "z": -29.564145040361176,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip8",
+      "x": 3.91886975727153e-15,
+      "y": 0,
+      "z": -32.0,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip9",
+      "x": -12.24586983568287,
+      "y": 0,
+      "z": -29.56414504036118,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip10",
+      "x": -22.62741699796952,
+      "y": 0,
+      "z": -22.627416997969526,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip11",
+      "x": -29.56414504036117,
+      "y": 0,
+      "z": -12.24586983568289,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip12",
+      "x": -32.0,
+      "y": 0,
+      "z": -5.878304635907295e-15,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip13",
+      "x": -29.564145040361172,
+      "y": 0,
+      "z": 12.24586983568288,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip14",
+      "x": -22.627416997969526,
+      "y": 0,
+      "z": 22.627416997969515,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "type": "strip",
+      "tag": "strip15",
+      "x": -12.245869835682893,
+      "y": 0,
+      "z": 29.56414504036117,
+      "numPoints": 219,
+      "spacing": 0.65625,
+      "direction": {
+        "x": 0,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ]
+}

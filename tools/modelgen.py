@@ -7,6 +7,20 @@ def generate_layout(fixture_name, num_points, point_spacing, num_strips_per_scul
     layout = {
         "label": fixture_name,
         "tag": fixture_name,
+        "parameters": {
+            "hostname": {
+                "type": "string",
+                "default": "127.0.0.1",
+                "label": "Hostname",
+                "description": "Example string parameter holding a hostname"
+            },
+            "startuniv": {
+                "type": "int",
+                "default": 0,
+                "label": "Start universe",
+                "description": "Universe number to start from"
+            },
+        },
         "components": []
     }
 
@@ -26,7 +40,27 @@ def generate_layout(fixture_name, num_points, point_spacing, num_strips_per_scul
                 "x": 0,
                 "y": 1,
                 "z": 0
-            }
+            },
+            "outputs": [
+                {
+                    "protocol": "artnet",
+                    "enabled": True,
+                    "universe": "$startuniv + " + str(2 * strip),
+                    "host": "$hostname",
+                    "start": 0,
+                    "num": 128,
+                    "byteOrder": "rgbw"
+                },
+                {
+                    "protocol": "artnet",
+                    "enabled": True,
+                    "universe": "$startuniv + " + str(2 * strip + 1),
+                    "host": "$hostname",
+                    "start": 128,
+                    "num": 91,
+                    "byteOrder": "rgbw"
+                }
+            ]
         }
         layout["components"].append(component)
         strip_num += 1
