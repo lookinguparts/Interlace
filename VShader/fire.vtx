@@ -172,7 +172,7 @@ void main() {
     float gradient = pow(1.0 - uv.y, 2.0) * 5.;
     float finalNoise = n * gradient;
 
-    vec3 coloring = vec3(2.*n, 2.*n*n*n, n*n*n*n);
+    vec3 coloring = vec3(2.*n*n*n, 2.*n*n*n*n, 2*n);
     float redmod = 1.0;
     float bluemod = 1.0;
     float greenmod = 1.0;
