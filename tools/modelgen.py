@@ -57,7 +57,7 @@ def generate_layout(fixture_name, num_points, point_spacing, num_strips_per_scul
                     "universe": "$startuniv + " + str(2 * strip + 1),
                     "host": "$hostname",
                     "start": 128,
-                    "num": 91,
+                    "num": 88,
                     "byteOrder": "rgbw"
                 }
             ]
