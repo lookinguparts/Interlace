@@ -1,0 +1,211 @@
+/*{
+	"DESCRIPTION": "palviz",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"VERTEX SDF"
+	],
+	"INPUTS": [
+         {
+            "NAME": "palval",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "pald",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 20.0
+         },
+         {
+            "NAME": "palspd",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.0,
+            "MAX": 20.0
+         },
+         {
+          "NAME": "rotspd",
+          "TYPE": "float",
+          "DEFAULT": 1.0,
+          "MIN": 0.0,
+          "MAX": 50.0
+         },
+         {
+        "NAME": "thick",
+        "TYPE": "float",
+        "DEFAULT": 10.0,
+        "MIN": 0.1,
+        "MAX": 50.0
+        },
+        {
+        "NAME": "pscale",
+        "TYPE": "float",
+        "DEFAULT": 4.85,
+        "MIN": 0.1,
+        "MAX": 10.0
+        }
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float palval;
+uniform float pald;
+uniform float palspd;
+uniform float rotspd;
+uniform float thick;
+uniform float pscale;
+
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <palettes.vti>
+#include <sdf2d.vti>
+#include <consts.vti>
+#include <uvwrap.vti>
+
+
+// Xavier Benech
+// Psyche Nimix
+//
+// Inspired by "Overly Satisfying" from Nimitz: https://www.shadertoy.com/view/Mts3zM
+// Also re-used so part of "The power of sin" by antonOTI: https://www.shadertoy.com/view/XdlSzB
+//
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+
+#define PI 3.14159265
+#define NUM 5.
+#define PALETTE vec3(1.5, 2.9, 3.5)
+
+#define MIRROR
+
+#define aspect 1.
+//(iResolution.x/iResolution.y)
+#define delta 0.04
+//(0.01 + 0.0625*exp(-0.00325*iResolution.x))
+
+
+mat2 rotate(in float a)
+{
+    float c = cos(a), s = sin(a);
+    return mat2(c,-s,s,c);
+}
+
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec2 hash( vec2 p ) {
+    p = vec2( dot(p,vec2(127.1,311.7)),
+              dot(p,vec2(269.5,183.3)) );
+
+    return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+
+float noise2( in vec2 p ) {
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+    vec2 i = floor( p + (p.x+p.y)*K1 );
+
+    vec2 a = p - i + (i.x+i.y)*K2;
+    vec2 o = step(a.yx,a.xy);
+    vec2 b = a - o + K2;
+    vec2 c = a - 1.0 + 2.0*K2;
+
+    vec3 h = max( 0.5-vec3(dot(a,a), dot(b,b), dot(c,c) ), 0.0 );
+
+    vec3 n = h*h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+
+    return dot( n, vec3(70.0) );
+}
+
+
+float tri(in float x)
+{
+    return abs(fract(x)-.5);
+}
+
+vec2 tri2(in vec2 p)
+{
+    return vec2(tri(p.x+tri(p.y*2.)),tri(p.y+tri(p.x*2.)));
+}
+
+mat2 trinoisemat = mat2( 0.970,  0.242, -0.242,  0.970 );
+
+float arc(in vec2 plr, in float radius, in float thickness, in float la, in float ha)
+{
+    // clamp arc start/end
+    float res = step(la, plr.y) * step(plr.y, ha);
+    // smooth outside
+    res *= smoothstep(plr.x, plr.x+delta,radius+thickness);
+    // smooth inside
+    float f = radius - thickness;
+    res *= smoothstep( f, f+delta, plr.x);
+    // smooth start
+    res *= smoothstep( la, la+delta, plr.y);
+    // smooth end
+    res *= 1. - smoothstep( ha-delta, ha, plr.y);
+    return res;
+}
+
+void main()
+{
+ 	vec2 uv = uvwraprot(position, fTime*rotspd);
+    vec2 q = uv*2.-1.;
+	q.x *= aspect;
+    float iTime = fTime;
+
+#ifdef MIRROR
+    //float pscale = 4.85;
+    vec2 p = pscale*q;
+    p.x = abs(p.x);
+    p.y = abs(p.y);
+#else
+    vec2 p = 1.23*q;
+#endif
+
+    float randomx = noise2(vec2(iTime*0.002, 0.));
+    // texture( iChannel0, vec2(0.123, 0.0015*iTime)).x)
+    p *= rotate(2.*PI*cos(0.1*iTime + randomx));
+    p.y = 2. - ( 0.2 + 2.0 * sin(0.5*iTime) )*(1.-exp(-abs(p.y)));
+
+    float lp = length(p);
+    float id = floor(lp*NUM+.5)/NUM;
+
+    vec4 n = vec4(noise2(vec2(id, 0.0025*iTime)), noise2(vec2(id, 0.00225*iTime)), 0., noise2(vec2(id, 0.00225*iTime)));
+
+    float nxscale = 0.9;
+    float nyscale = 1.;
+    float nwscale = 50.;
+
+    n.x *= nxscale;
+    n.y *= nyscale;
+    n.w *= nwscale;
+
+    p *= rotate(2.72 * PI * n.x);
+    p.y = abs(p.y);
+
+    //polar coords
+    vec2 plr = vec2(lp, atan(p.y, p.x));
+
+    //Draw concentric arcs
+    float rz = arc(plr, id, clamp(0.,1.,thick*n.w)*0.5/NUM, 0., PI*n.y);
+
+    rz *= step(1./NUM, id);
+
+    float m = rz;
+    rz = clamp(rz, 0., 1.);
+    vec3 col = vec3(rz, rz, rz); //(sin(PALETTE+id*10.+5.*iTime)*0.5+0.65)*rz;
+
+
+    //col *= 1.5;
+	outColor = col;
+}
