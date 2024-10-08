@@ -48,17 +48,17 @@ def generate_layout(fixture_name, num_points, point_spacing, num_strips_per_scul
                     "universe": "$startuniv + " + str(2 * strip),
                     "host": "$hostname",
                     "start": 0,
-                    "num": 128,
-                    "byteOrder": "rgbw"
+                    "num": 170,
+                    "byteOrder": "bgr"
                 },
                 {
                     "protocol": "artnet",
                     "enabled": True,
                     "universe": "$startuniv + " + str(2 * strip + 1),
                     "host": "$hostname",
-                    "start": 128,
-                    "num": 88,
-                    "byteOrder": "rgbw"
+                    "start": 170,
+                    "num": 46,
+                    "byteOrder": "bgr"
                 }
             ]
         }
