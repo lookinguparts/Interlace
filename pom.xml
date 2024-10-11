@@ -4,7 +4,7 @@
 
     <groupId>art.lookingup</groupId>
     <artifactId>Interlace</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.6</version>
     <packaging>jar</packaging>
 
     <properties>
