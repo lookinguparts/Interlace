@@ -1,0 +1,105 @@
+/*{
+	"DESCRIPTION": "texwarp",
+	"CREDIT": "by tracyscott",
+	"ISFVSN": "2.0",
+	"CATEGORIES": [
+		"TEXTURE SHADER"
+	],
+	"INPUTS": [
+         {
+            "NAME": "x1",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": -10,
+            "MAX": 10
+         },
+         {
+            "NAME": "y1",
+            "TYPE": "float",
+            "DEFAULT": 0.0,
+            "MIN": -10,
+            "MAX": 10
+         },
+          {
+         "NAME": "zoomx",
+           "TYPE": "float",
+           "DEFAULT": 1.0,
+           "MIN": 0.1,
+           "MAX": 5
+        },
+        {
+                 "NAME": "zoomy",
+                   "TYPE": "float",
+                   "DEFAULT": 1.0,
+                   "MIN": 0.1,
+                   "MAX": 5
+                },
+       {
+                        "NAME": "rotspd",
+                          "TYPE": "float",
+                          "DEFAULT": 0,
+                          "MIN": -20.0,
+                          "MAX": 20
+                       },
+                       {
+                        "NAME": "warp",
+                          "TYPE": "float",
+                          "DEFAULT": 0,
+                          "MIN": 0.0,
+                          "MAX": 1.0
+                       }
+
+	]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float x1;
+uniform float y1;
+uniform float zoomx;
+uniform float zoomy;
+uniform float rotspd;
+uniform float warp;
+
+uniform sampler2D textureSampler;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <uvwrap.vti>
+
+void main(){
+    vec2 st = uvwraprot(position, rotspd*fTime);
+    vec3 color = vec3(0.);
+
+    //float x = st.x - 0.5;
+    //float y = st.y - 0.5;
+    //st.y = -x * sin(fTime) + y * cos(fTime);
+    //st.x = x * cos(fTime) + y * sin(fTime);
+    //st.y += 0.5;
+    //st.x += 0.5;
+    //st.x += x;
+    //st.y += y;
+    // center around the origin
+    //st.x -= 0.5;
+    //st.y -= 0.5;
+    //scale
+    st.x *= zoomx;
+    st.y *= zoomy;
+    st.y -= y1;
+    st.x -= x1;
+    // go back
+    //st.x += zoomx*0.5;
+    //st.y += zoomy*0.5;
+    vec2 center = vec2(0.5, 0.5);
+    vec2 dir = center - st;
+
+    float d = length(dir) - fract(fTime * 0.1);
+    d *= 1. - smoothstep(0., warp, abs(d));
+    dir = normalize(dir);
+
+    color = texture(textureSampler, st + dir * d).rgb;
+    outColor = color;
+}

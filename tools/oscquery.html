@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple OSCQuery Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #output { white-space: pre-wrap; background-color: #f0f0f0; padding: 10px; border-radius: 5px; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+<h1>Simple OSCQuery Client</h1>
+<div>
+    <label for="hostInput">Host:</label>
+    <input type="text" id="hostInput" value="192.168.4.181">
+    <label for="portInput">Port:</label>
+    <input type="number" id="portInput" value="3031">
+</div>
+<button onclick="queryOSC()">Query OSC Service</button>
+<h2>Output:</h2>
+<div id="output"></div>
+
+<script>
+    function log(message) {
+        const output = document.getElementById('output');
+        output.textContent += message + '\n';
+    }
+
+    function clearLog() {
+        document.getElementById('output').textContent = '';
+    }
+
+    async function queryOSC() {
+        clearLog();
+        const host = document.getElementById('hostInput').value;
+        const port = document.getElementById('portInput').value;
+
+        if (!host || !port) {
+            log('Please enter both host and port');
+            return;
+        }
+
+        try {
+            log(`Querying OSCQuery service at ${host}:${port}...`);
+            const response = await fetch(`http://${host}:${port}`, {
+                mode: 'no-cors'
+            });
+
+            log('Query sent successfully.');
+            log('Note: Due to CORS restrictions, we cannot read the response content.');
+            log('But if you see this message, it means the request was sent without errors.');
+        } catch (error) {
+            log(`Error: ${error.message}`);
+        }
+    }
+</script>
+</body>
+</html>

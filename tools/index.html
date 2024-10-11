@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSCQuery Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #output { white-space: pre-wrap; background-color: #f0f0f0; padding: 10px; border-radius: 5px; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+<h1>OSCQuery Client</h1>
+<div>
+    <label for="hostInput">Host:</label>
+    <input type="text" id="hostInput" placeholder="e.g., localhost">
+    <label for="portInput">Port:</label>
+    <input type="number" id="portInput" placeholder="e.g., 8000">
+</div>
+<button onclick="discoverAndQuery()">Discover and Query</button>
+<button onclick="manualQuery()">Manual Query</button>
+<h2>Output:</h2>
+<div id="output"></div>
+
+<script>
+    function log(message) {
+        const output = document.getElementById('output');
+        output.textContent += message + '\n';
+    }
+
+    function clearLog() {
+        document.getElementById('output').textContent = '';
+    }
+
+    async function sendRequest(endpoint, params = {}) {
+        const response = await fetch(endpoint + '?' + new URLSearchParams(params));
+        return await response.json();
+    }
+
+    async function discoverAndQuery() {
+        clearLog();
+        try {
+            log('Discovering OSCQuery service...');
+            const result = await sendRequest('/discover');
+            log(`Found service at ${result.host}:${result.port}`);
+
+            log('Querying OSCQuery service...');
+            const queryResult = await sendRequest('/query', { host: result.host, port: result.port });
+            log('Query result:');
+            log(JSON.stringify(queryResult, null, 2));
+        } catch (error) {
+            log(`Error: ${error.message}`);
+        }
+    }
+
+    async function manualQuery() {
+        clearLog();
+        const host = document.getElementById('hostInput').value;
+        const port = document.getElementById('portInput').value;
+
+        if (!host || !port) {
+            log('Please enter both host and port');
+            return;
+        }
+
+        try {
+            log(`Querying OSCQuery service at ${host}:${port}...`);
+            const result = await sendRequest('/query', { host, port });
+            log('Query result:');
+            log(JSON.stringify(result, null, 2));
+        } catch (error) {
+            log(`Error: ${error.message}`);
+        }
+    }
+</script>
+</body>
+</html>
