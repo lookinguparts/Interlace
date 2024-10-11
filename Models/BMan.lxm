@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "timestamp": 1724727280511,
+  "fixtures": [
+    {
+      "jsonFixtureType": "Hyper6032216",
+      "jsonParameters": {
+        "hostname": "192.168.1.115",
+        "startuniv": 0
+      },
+      "id": 59209,
+      "class": "heronarts.lx.structure.JsonFixture",
+      "internal": {
+        "modulationColor": 0,
+        "modulationControlsExpanded": true,
+        "modulationsExpanded": true
+      },
+      "parameters": {
+        "label": "Hyper1",
+        "x": 0.0,
+        "y": 0.0,
+        "z": 180.0,
+        "yaw": 8.0,
+        "pitch": 0.0,
+        "roll": 0.0,
+        "scale": 1.0,
+        "selected": false,
+        "deactivate": false,
+        "enabled": true,
+        "brightness": 1.0,
+        "identify": false,
+        "mute": false,
+        "solo": false,
+        "tags": "h1,H1",
+        "fixtureType": "Hyper6032216"
+      },
+      "children": {}
+    },
+    {
+      "jsonFixtureType": "Hyper6032216",
+      "jsonParameters": {
+        "hostname": "192.168.1.115",
+        "startuniv": 32
+      },
+      "id": 59226,
+      "class": "heronarts.lx.structure.JsonFixture",
+      "internal": {
+        "modulationColor": 0,
+        "modulationControlsExpanded": true,
+        "modulationsExpanded": true
+      },
+      "parameters": {
+        "label": "Hyper2",
+        "x": -207.0,
+        "y": 0.0,
+        "z": -90.0,
+        "yaw": -25.0,
+        "pitch": 0.0,
+        "roll": 0.0,
+        "scale": 1.0,
+        "selected": false,
+        "deactivate": false,
+        "enabled": true,
+        "brightness": 1.0,
+        "identify": false,
+        "mute": false,
+        "solo": false,
+        "tags": "h2,H2",
+        "fixtureType": "Hyper6032216"
+      },
+      "children": {}
+    },
+    {
+      "jsonFixtureType": "Hyper6032216",
+      "jsonParameters": {
+        "hostname": "192.168.1.116",
+        "startuniv": 0
+      },
+      "id": 59243,
+      "class": "heronarts.lx.structure.JsonFixture",
+      "internal": {
+        "modulationColor": 0,
+        "modulationControlsExpanded": true,
+        "modulationsExpanded": true
+      },
+      "parameters": {
+        "label": "Hyper3",
+        "x": 207.0,
+        "y": 0.0,
+        "z": -90.0,
+        "yaw": 25.0,
+        "pitch": 0.0,
+        "roll": 0.0,
+        "scale": 1.0,
+        "selected": true,
+        "deactivate": false,
+        "enabled": true,
+        "brightness": 1.0,
+        "identify": false,
+        "mute": false,
+        "solo": false,
+        "tags": "h3,H3",
+        "fixtureType": "Hyper6032216"
+      },
+      "children": {}
+    }
+  ],
+  "normalization": {
+    "normalizationMode": 0,
+    "normalizationX": 0.0,
+    "normalizationY": 0.0,
+    "normalizationZ": 0.0,
+    "normalizationWidth": 1000.0,
+    "normalizationHeight": 1000.0,
+    "normalizationDepth": 1000.0
+  }
+}
