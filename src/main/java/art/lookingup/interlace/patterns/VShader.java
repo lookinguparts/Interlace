@@ -1,6 +1,7 @@
 package art.lookingup.interlace.patterns;
 
 import heronarts.glx.GLX;
+import heronarts.glx.ui.UI2dComponent;
 import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.model.LXPoint;
 import art.lookingup.util.GLUtil;
@@ -203,6 +204,9 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
         isfObj = cachedResult.entry.isfMetadata;
         paramLocations.clear();
         paramLocations.putAll(cachedResult.entry.uniformLocations);
+        for (String key : cachedResult.entry.uniformLocations.keySet()) {
+          LX.log("Restoring parameter: " + key + " at location: " + cachedResult.entry.uniformLocations.get(key));
+        }
         
         // Restore parameters from cached ISF metadata
         if (isfObj != null && isfObj.has("INPUTS")) {
@@ -216,6 +220,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
             float pMax = input.get("MAX").getAsFloat();
             
             if (clearSliders || (!clearSliders && !scriptParams.containsKey(pName))) {
+              LX.log("Restoring parameter: " + pName + " with default: " + pDefault);
               CompoundParameter cp = new CompoundParameter(pName, pDefault, pMin, pMax);
               scriptParams.put(pName, cp);
               addParameter(pName, cp);
@@ -238,8 +243,11 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
         }
         
         // Find fTime location from cached data
-        fTimeLoc = paramLocations.getOrDefault("fTime", -2);
-        
+        //fTimeLoc = paramLocations.getOrDefault("fTime", -2);
+        // fTime isn't one of the script-based params so it doesn't get passed into our shader cache saving
+        // mechanism so it is not stored in the manifest.
+        fTimeLoc = gl.glGetUniformLocation(shaderProgramId, "fTime");
+        LX.log("Found fTimeLoc at: " + fTimeLoc);
         glDrawable.getContext().release();
         onReload.bang();
         forceReload = false; // Reset force reload flag
@@ -312,6 +320,10 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     for (String scriptParam : scriptParams.keySet()) {
       int paramLoc = gl.glGetUniformLocation(shaderProgramId, scriptParam);
       paramLocations.put(scriptParam, paramLoc);
+    }
+
+    for (String key : paramLocations.keySet()) {
+      LX.log("Parameter: " + key + " at location: " + paramLocations.get(key));
     }
 
     // Cache the compiled shader
@@ -388,7 +400,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   @Override
   public void onParameterChanged(LXParameter p) {
     if (p == this.scriptName) {
-      // LX.log("scriptName parameter changed!");
+      LX.log("scriptName parameter changed!");
       reloadShader(((StringParameter)p).getString());
     }
   }
@@ -456,6 +468,11 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       }
     });
 
+    final UI2dContainer sliders = (UI2dContainer)
+            UI2dContainer.newHorizontalContainer(uiDevice.getContentHeight() - 20, 2)
+                    .setPosition(0, 20)
+                    .addToContainer(uiDevice);
+
     this.openButton = (UIButton) new UIButton(125, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
@@ -465,7 +482,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
             "Vertex Shader",
             new String[] { "vtx" },
             GLUtil.shaderDir(lx) + File.separator,
-            (path) -> { onOpen(new File(path)); }
+            (path) -> { onOpen(new File(path), sliders); }
           );
         }
       }
@@ -475,11 +492,11 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       .setDescription("Open Shader")
       .addToContainer(uiDevice);
 
-
     final UIButton resetButton = (UIButton) new UIButton(148, 0, 18, 18) {
       @Override
       public void onToggle(boolean on) {
         if (on) {
+          sliders.removeAllChildren();
           lx.engine.addTask(() -> {
             logger.info("Force reloading shader (bypassing cache)");
             forceReload = true;
@@ -508,10 +525,7 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       .addToContainer(uiDevice);
 
 
-    final UI2dContainer sliders = (UI2dContainer)
-      UI2dContainer.newHorizontalContainer(uiDevice.getContentHeight() - 20, 2)
-        .setPosition(0, 20)
-        .addToContainer(uiDevice);
+
 
     final UILabel error = (UILabel)
       new UILabel(0, 20, uiDevice.getContentWidth(), uiDevice.getContentHeight() - 20)
@@ -522,13 +536,13 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
     // Add sliders to container on every reload
     pattern.onReload.addListener(p -> {
-      sliders.removeAllChildren();
+      //sliders.removeAllChildren();
       new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, alphaThresh)
         .addToContainer(sliders);
       new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, speed)
         .addToContainer(sliders);
-      for (CompoundParameter slider : pattern.scriptParams.values()) {
-        new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, slider)
+      for (CompoundParameter scriptParam : pattern.scriptParams.values()) {
+        new UISlider(UISlider.Direction.VERTICAL, 40, sliders.getContentHeight() - 14, scriptParam)
           .addToContainer(sliders);
       }
       float contentWidth = LXUtils.maxf(minContentWidth, sliders.getContentWidth());
@@ -549,13 +563,13 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
 
   }
 
-  public void onOpen(final File openFile) {
+  public void onOpen(final File openFile, UI2dContainer sliders) {
     this.openButton.setActive(false);
     if (openFile != null) {
       LX lx = getLX();
       String baseFilename = openFile.getName().substring(0, openFile.getName().indexOf('.'));
       LX.log("Loading: " + baseFilename);
-
+      sliders.removeAllChildren();
       lx.engine.addTask(() -> {
         LX.log("Running script name setting task");
         lx.command.perform(new LXCommand.Parameter.SetString(
