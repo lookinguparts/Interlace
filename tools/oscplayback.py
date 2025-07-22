@@ -6,7 +6,9 @@ from pythonosc import udp_client
 def parse_osc_message(msg):
     parts = msg.split(' ', 1)
     address = parts[0]
-    args = json.loads(f"[{parts[1]}]") if len(parts) > 1 else []
+
+    #args = json.loads(f"[{parts[1]}]") if len(parts) > 1 else []
+    args = [float(x) for x in parts[1].split()] if len(parts) > 1 else []
     return address, args
 
 def play_osc_file(filename, port, host='127.0.0.1', print_messages=False):

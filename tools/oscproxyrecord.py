@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import signal
+import socket
 import json
 import time
 from pythonosc.osc_server import AsyncIOOSCUDPServer
@@ -39,6 +40,16 @@ class OSCLogger:
         print("Press Enter to save and exit...")
         await asyncio.get_event_loop().run_in_executor(None, input)
 
+
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        try:
+            s.bind(('127.0.0.1', port))
+            return False
+        except OSError:
+            return True
+
 def main():
     parser = argparse.ArgumentParser(description="OSC Listener, Logger, and Forwarder")
     parser.add_argument("port", type=int, help="The UDP port to listen on")
@@ -53,12 +64,18 @@ def main():
     dispatcher.set_default_handler(osc_logger.osc_handler)
 
     async def init_main():
-        server = AsyncIOOSCUDPServer(("0.0.0.0", args.port), dispatcher, asyncio.get_event_loop())
-        transport, protocol = await server.create_serve_endpoint()
+        if is_port_in_use(args.port):
+            print(f"Error: Port {args.port} is already in use on this machine.")
+            return
 
+        print(f"Listening on port {args.port}")
+
+        server = AsyncIOOSCUDPServer(("127.0.0.1", args.port), dispatcher, asyncio.get_event_loop())
+        transport, protocol = await server.create_serve_endpoint()
         await osc_logger.loop()
 
-        transport.close()
+        if transport != None:
+            transport.close()
         with open(args.filename, 'w') as f:
             for message in osc_logger.messages:
                 f.write(f"{json.dumps(message)}\n")

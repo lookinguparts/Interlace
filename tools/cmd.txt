@@ -1,0 +1,1 @@
+python magfit.py test.json --threshold 1 --window-size 20 --smoothing 0.1 --output magxyzraw1.csv --sample "-4391, 2358, -3803" --datasmooth 0 
