@@ -26,6 +26,19 @@ import static com.jogamp.opengl.GL2ES3.*;
 import static com.jogamp.opengl.GL2ES3.GL_RASTERIZER_DISCARD;
 
 public class GLUtil {
+  
+  /**
+   * Result container for shader loading with dependency tracking
+   */
+  public static class ShaderLoadResult {
+    public String source;
+    public Set<String> dependencies;
+    
+    public ShaderLoadResult(String source, Set<String> dependencies) {
+      this.source = source;
+      this.dependencies = dependencies;
+    }
+  }
   static public class VSGLContext {
 
     public VSGLContext(GL3 gl) {
@@ -244,6 +257,20 @@ public class GLUtil {
     return preprocessShader(shaderDir, shaderBody);
   }
 
+  /**
+   * Load shader with dependency tracking for caching
+   */
+  static public ShaderLoadResult loadShaderWithDependencies(String shaderDir, String shaderFile)
+    throws Exception {
+    String mainShaderPath = shaderDir + File.separator + shaderFile;
+    String shaderBody = loadFile(shaderDir, shaderFile);
+    Set<String> dependencies = new HashSet<>();
+    dependencies.add(mainShaderPath); // Include the main shader file itself
+    
+    String processedSource = preprocessShaderWithDependencies(shaderDir, shaderBody, dependencies);
+    return new ShaderLoadResult(processedSource, dependencies);
+  }
+
   static public String preprocessShader(String shaderDir, String shaderBody)
     throws Exception {
     int MAX_INCLUDE_DEPTH = 10;
@@ -266,6 +293,73 @@ public class GLUtil {
     return shaderBody;
   }
 
+  /**
+   * Preprocess shader with dependency tracking
+   */
+  static public String preprocessShaderWithDependencies(String shaderDir, String shaderBody, Set<String> dependencies)
+    throws Exception {
+    int MAX_INCLUDE_DEPTH = 10;
+    try {
+      int depth = 0;
+      while (true) {
+        if (depth >= MAX_INCLUDE_DEPTH) {
+          throw new RuntimeException("Exceeded maximum #include depth of " + MAX_INCLUDE_DEPTH);
+        }
+        String expandedShaderBody = expandIncludesWithDependencies(shaderDir, shaderBody, dependencies);
+        depth++;
+        if (expandedShaderBody == null) {
+          break;
+        }
+        shaderBody = expandedShaderBody;
+      }
+    } catch (Exception e) {
+      throw new Exception("Shader Preprocessor Error. " + e.getMessage());
+    }
+    return shaderBody;
+  }
+
+
+  /**
+   * Expand #include statements with dependency tracking
+   */
+  static public String expandIncludesWithDependencies(String shaderDir, String input, Set<String> dependencies) throws IOException {
+    boolean foundInclude = false;
+    int lineCount = 0;
+
+    StringBuilder output = new StringBuilder();
+    BufferedReader reader = new BufferedReader(new StringReader(input));
+    String line;
+    while ((line = reader.readLine()) != null) {
+      lineCount++;
+      if (line.startsWith("#include")) {
+        foundInclude = true;
+        try {
+          String filename = getFileName(shaderDir, line.substring("#include ".length(), line.length()));
+          dependencies.add(filename); // Track this dependency
+          
+          BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+          String fileLine;
+
+          // restart line counter for include file
+          output.append("#line 1 \n");
+          while ((fileLine = fileReader.readLine()) != null) {
+            output.append(fileLine).append("\n");
+          }
+          fileReader.close();
+        } catch (Exception e) {
+          throw new IOException("Line " + lineCount + " : " + line + "\n" + e.getMessage());
+        }
+
+        // reset line counter to main file count
+        output.append("#line ").append(lineCount + 1).append("\n");
+      } else {
+        output.append(line).append("\n");
+      }
+    }
+    reader.close();
+    if (foundInclude) return output.toString();
+    else return null;
+  }
 
   // Expand #include statements in the shader code.  Handles nested includes
   // up to MAX_INCLUDE_DEPTH (defaults to 10 levels.)

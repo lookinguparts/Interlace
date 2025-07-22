@@ -4,6 +4,7 @@ import heronarts.glx.GLX;
 import heronarts.glx.ui.vg.VGraphics;
 import heronarts.lx.model.LXPoint;
 import art.lookingup.util.GLUtil;
+import art.lookingup.util.ShaderCache;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -16,6 +17,8 @@ import heronarts.lx.color.LXColor;
 import heronarts.lx.command.LXCommand;
 import heronarts.lx.parameter.CompoundParameter;
 import heronarts.lx.parameter.LXParameter;
+import heronarts.lx.parameter.LXListenableParameter;
+import heronarts.lx.parameter.LXParameterListener;
 import heronarts.lx.parameter.MutableParameter;
 import heronarts.lx.parameter.StringParameter;
 import heronarts.lx.pattern.LXPattern;
@@ -33,6 +36,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.logging.Logger;
 
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
@@ -63,14 +68,20 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
   public final MutableParameter onReload = new MutableParameter("Reload");
   public final StringParameter error = new StringParameter("Error", null);
   private UIButton openButton;
+  
+  // Shader caching
+  private ShaderCache shaderCache;
+  private boolean forceReload = false;
 
   public static GLOffscreenAutoDrawable glDrawable;
 
+  Map<LXListenableParameter, List<LXParameterListener>> listeners = new HashMap<>();
 
   public VShader(LX lx) {
     super(lx);
 
     initializeGLContext();
+    shaderCache = ShaderCache.getInstance(lx);
     addParameter("scriptName", scriptName);
     addParameter("speed", speed);
     addParameter("alfTh", alphaThresh);
@@ -177,40 +188,101 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
     newSliderKeys.clear();
     removeSliderKeys.clear();
 
+    String shaderDir = GLUtil.shaderDir(lx);
+    boolean useCache = !forceReload && shaderCache.isCacheValid(shaderName, shaderDir) && 
+                      shaderCache.isGLContextValid(gl);
+
+    if (useCache) {
+      // Try to load from cache
+      ShaderCache.CachedShaderResult cachedResult = shaderCache.loadCachedShader(shaderName, gl);
+      if (cachedResult != null) {
+        LX.log("Loading shader from cache: " + shaderName);
+        
+        // Restore from cached data
+        shaderProgramId = cachedResult.programId;
+        isfObj = cachedResult.entry.isfMetadata;
+        paramLocations.clear();
+        paramLocations.putAll(cachedResult.entry.uniformLocations);
+        
+        // Restore parameters from cached ISF metadata
+        if (isfObj != null && isfObj.has("INPUTS")) {
+          JsonArray inputs = isfObj.getAsJsonArray("INPUTS");
+          for (int k = 0; k < inputs.size(); k++) {
+            JsonObject input = (JsonObject)inputs.get(k);
+            String pName = input.get("NAME").getAsString();
+            String pType = input.get("TYPE").getAsString();
+            float pDefault = input.get("DEFAULT").getAsFloat();
+            float pMin = input.get("MIN").getAsFloat();
+            float pMax = input.get("MAX").getAsFloat();
+            
+            if (clearSliders || (!clearSliders && !scriptParams.containsKey(pName))) {
+              CompoundParameter cp = new CompoundParameter(pName, pDefault, pMin, pMax);
+              scriptParams.put(pName, cp);
+              addParameter(pName, cp);
+            }
+            newSliderKeys.add(pName);
+          }
+        }
+        
+        // Clean up old parameters if needed
+        if (!clearSliders) {
+          for (String key : scriptParams.keySet()) {
+            if (!newSliderKeys.contains(key)) {
+              removeSliderKeys.add(key);
+            }
+          }
+          for (String key : removeSliderKeys) {
+            removeParameter(key);
+            scriptParams.remove(key);
+          }
+        }
+        
+        // Find fTime location from cached data
+        fTimeLoc = paramLocations.getOrDefault("fTime", -2);
+        
+        glDrawable.getContext().release();
+        onReload.bang();
+        forceReload = false; // Reset force reload flag
+        return;
+      }
+    }
+
+    // Cache miss or forced reload - compile from source
+    LX.log("Compiling shader from source: " + shaderName);
     shaderProgramId = gl.glCreateProgram();
     String shaderSource = "";
+    Set<String> dependencies = new HashSet<>();
 
     try {
-      shaderSource = GLUtil.loadShader(GLUtil.shaderDir(lx), shaderName + ".vtx");
+      GLUtil.ShaderLoadResult result = GLUtil.loadShaderWithDependencies(shaderDir, shaderName + ".vtx");
+      shaderSource = result.source;
+      dependencies = result.dependencies;
     } catch (Exception ex) {
       LX.log("Error loading shader: " + ex.getMessage());
     }
 
-    //LX.log("Line: " + shaderSource);
     int endOfComment = shaderSource.indexOf("*/");
     int startOfComment = shaderSource.indexOf("/*");
     String jsonDef = shaderSource.substring(startOfComment + 2, endOfComment);
-    //LX.log("JsonDef: " + jsonDef);
     isfObj = (JsonObject)new JsonParser().parse(jsonDef);
     JsonArray inputs = isfObj.getAsJsonArray("INPUTS");
 
     for (int k = 0; k < inputs.size(); k++) {
       JsonObject input = (JsonObject)inputs.get(k);
       String pName = input.get("NAME").getAsString();
-      String pType = input.get("TYPE").getAsString(); // must be float for now
+      String pType = input.get("TYPE").getAsString();
       float pDefault = input.get("DEFAULT").getAsFloat();
       float pMin = input.get("MIN").getAsFloat();
       float pMax =  input.get("MAX").getAsFloat();
-      // Add the parameter
+      
       if (clearSliders || (!clearSliders && !scriptParams.containsKey(pName))) {
         CompoundParameter cp = new CompoundParameter(pName, pDefault, pMin, pMax);
         scriptParams.put(pName, cp);
         addParameter(pName, cp);
-        // LX.log("Found param: " + pName);
       }
       newSliderKeys.add(pName);
-      // How to remove ones we haven't seen?
     }
+    
     if (!clearSliders) {
       for (String key : scriptParams.keySet()) {
         if (!newSliderKeys.contains(key)) {
@@ -230,38 +302,31 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       LX.log("Error creating shader: " + ex.getMessage());
     }
 
-    // At this point, our only dependency is the integer shaderProgramId.
     gl.glTransformFeedbackVaryings(shaderProgramId, 1, new String[]{"outColor"}, GL_INTERLEAVED_ATTRIBS);
     GLUtil.link(gl, shaderProgramId);
 
-    /*
-    Once the program is linked we can free the shaderId resources?
-    https://stackoverflow.com/questions/9113154/proper-way-to-delete-glsl-shader
-    Maybe there are some driver-specific surprises according to above?
-
-    int vertexShaderId =
-          createShader(gl4, programId, getVertexShaderTemplate(), GL4.GL_VERTEX_SHADER);
-      int fragmentShaderId = createShader(gl4, programId, shaderBody, GL4.GL_FRAGMENT_SHADER);
-      link(gl4, programId);
-
-      // free native resources after link
-      gl4.glDetachShader(programId, fragmentShaderId);
-      gl4.glDetachShader(programId, vertexShaderId);
-      gl4.glDeleteShader(fragmentShaderId);
-      gl4.glDeleteShader(vertexShaderId);
-     */
-
-    // Now, find uniform locations.
+    // Find uniform locations
+    paramLocations.clear();
     fTimeLoc = gl.glGetUniformLocation(shaderProgramId, "fTime");
     LX.log("Found fTimeLoc at: " + fTimeLoc);
     for (String scriptParam : scriptParams.keySet()) {
       int paramLoc = gl.glGetUniformLocation(shaderProgramId, scriptParam);
       paramLocations.put(scriptParam, paramLoc);
-      //LX.log("Found " + scriptParam + " at: " + paramLoc);
     }
+
+    // Cache the compiled shader
+    try {
+      LX.log("Attempting to cache shader: " + shaderName + " with program ID: " + shaderProgramId);
+      shaderCache.cacheShader(shaderName, shaderDir, shaderProgramId, paramLocations, isfObj, dependencies, gl);
+      LX.log("Cache attempt completed for: " + shaderName);
+    } catch (Exception ex) {
+      LX.log("Warning: Failed to cache shader " + shaderName + ": " + ex.getMessage());
+      ex.printStackTrace();
+    }
+
     glDrawable.getContext().release();
-    // Notify the UI
     onReload.bang();
+    forceReload = false; // Reset force reload flag
   }
 
   @Override
@@ -381,8 +446,14 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
         .setTextOffset(0, -1)
         .addToContainer(uiDevice);
 
-    pattern.scriptName.addListener(p -> {
-      fileLabel.setLabel(pattern.scriptName.getString());
+    //pattern.scriptName.addListener(p -> {
+    //  fileLabel.setLabel(pattern.scriptName.getString());
+    //});
+    // Wrap the listener so we can clean it up on dispose.
+    addParamListener(pattern.scriptName, new LXParameterListener() {
+      public void onParameterChanged(LXParameter p) {
+        fileLabel.setLabel(pattern.scriptName.getString());
+      }
     });
 
     this.openButton = (UIButton) new UIButton(125, 0, 18, 18) {
@@ -410,14 +481,30 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
       public void onToggle(boolean on) {
         if (on) {
           lx.engine.addTask(() -> {
-            logger.info("Reloading script");
+            logger.info("Force reloading shader (bypassing cache)");
+            forceReload = true;
             reloadShader(scriptName.getString(), false);
           });
         }
       }
     }.setIcon(ui.theme.iconLoad)
       .setMomentary(true)
-      .setDescription("Reload shader")
+      .setDescription("Force reload shader (bypass cache)")
+      .addToContainer(uiDevice);
+
+    final UIButton clearCacheButton = (UIButton) new UIButton(171, 0, 18, 18) {
+      @Override
+      public void onToggle(boolean on) {
+        if (on) {
+          lx.engine.addTask(() -> {
+            logger.info("Clearing shader cache");
+            shaderCache.clearCache();
+          });
+        }
+      }
+    }.setIcon(ui.theme.iconLoad)
+      .setMomentary(true)
+      .setDescription("Clear shader cache")
       .addToContainer(uiDevice);
 
 
@@ -477,5 +564,22 @@ public class VShader extends LXPattern implements UIDeviceControls<VShader> {
         ));
       });
     }
+  }
+
+  public void addParamListener(LXListenableParameter p, LXParameterListener l) {
+    p.addListener(l);
+    List<LXParameterListener> plisteners = listeners.computeIfAbsent(p, k -> new ArrayList<>());
+    plisteners.add(l);
+  }
+
+  @Override
+  public void dispose() {  
+    for (LXListenableParameter param : listeners.keySet()) {
+      for (LXParameterListener listener : listeners.get(param)) {
+        param.removeListener(listener);
+      }
+    }
+    listeners.clear();
+    super.dispose();
   }
 }
