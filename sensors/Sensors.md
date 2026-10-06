@@ -92,9 +92,33 @@ adding one `Interlace Magnometer` node each, with args `["2"]` and `["3"]`.
 
 ## Calibrating a tower
 
-Calibration is a recording of the tower visiting known positions. You turn it to each of 28 marks
-10 degrees apart, from the 0 degree stop to the 270 degree stop, holding still for 3 seconds at
-each one. OSCPlay records the readings, finds the still stretches, and pairs each with its mark.
+Calibration is a recording of the tower visiting known positions. You turn it to each mark in turn,
+from the 0 degree stop to the 270 degree stop, holding still for 3 seconds at each one. OSCPlay
+records the readings, finds the still stretches, and pairs each with its mark.
+
+### How many marks
+
+The mark spacing trades setup time against accuracy. Measured against the simulator's sensor model,
+fitting from a sweep at each spacing and then checking the recovered angle between the marks:
+
+| Spacing | Marks | Sweep | Mean error | Worst error |
+|---|---|---|---|---|
+| 10 deg | 28 | 111 s | 0.05 deg | 0.26 deg |
+| 15 deg | 19 | 75 s | 0.06 deg | 0.15 deg |
+| 30 deg | 10 | 39 s | 0.13 deg | 0.34 deg |
+| 45 deg | 7 | 27 s | 0.31 deg | 0.74 deg |
+| 90 deg | 4 | 15 s | 1.32 deg | 2.43 deg |
+
+15 degrees costs almost nothing in accuracy for a third less work, and 30 degrees is still well
+inside the degree or two that is visible in the tower while cutting 28 stops down to 10. Below that
+the curve starts to lose the shape of the distortion.
+
+Real steel may distort less smoothly than the simulator's model, so treat the coarse rows as
+optimistic and confirm against the real installation before relying on 45 or 90 degrees.
+
+The spacing has to divide 270 evenly: 10, 15, 18, 27, 30, 45, 54, 90 and 135 work, 20 does not.
+A spacing that doesn't divide evenly is rejected with a message rather than silently labelling the
+last mark past the far stop.
 
 The full procedure for the real installation, including the marking-out and the two-person
 workflow, is in OSCPlay's own guide:
@@ -109,7 +133,8 @@ The short version, per tower:
    and don't revisit a mark.
 4. Finish against the 270 degree stop, hold 3 seconds, **Stop Recording**.
 5. **Tools > Sensor Calibration...**, set **Preset** to this tower (`Interlace Mag 2`), pick the
-   recording, and wait for the green message ending **"All 28 marks found."**
+   recording, set **Step** to the spacing you marked out, and wait for the green message ending
+   **"All N marks found."**
 6. **Save.** The tower uses it immediately; no restart needed.
 
 Only the green message lets you save. Yellow means the holds weren't found cleanly:
@@ -152,7 +177,8 @@ cd ../../OSCPlay
 ./calibrate.sh --project interlacetest1 --recording tower2-2026-09-23 --preset interlace --mag 2
 ```
 
-Add `--dry-run` to see what it found without saving. `--csv <file>` reads
+Add `--mark-spacing <degrees>` for anything other than the default 10, for example
+`--mark-spacing 30`. Add `--dry-run` to see what it found without saving. `--csv <file>` reads
 `timestamp,magx,magy,magz` rows instead of a recording, and `--min-hold` / `--threshold` override
 the hold detection if a recording is marginal.
 
@@ -180,9 +206,13 @@ next person. It hits the stops at +/-135 degrees and uses both directions.
 ```bash
 python3 simulate_mag.py --mode calibrate --mag 2
 python3 simulate_mag.py --mode calibrate --mag 3
+
+# Coarser marks for a quicker pass: 10 marks instead of 28
+python3 simulate_mag.py --mode calibrate --mag 2 --step 30
 ```
 
-Each runs **111 seconds** (28 marks x 3s hold, plus 27 x 1s moves) and exits on its own. Record it
+The default runs **111 seconds** (28 marks x 3s hold, plus 27 x 1s moves) and exits on its own;
+`--step 30` takes 39 seconds. Record it
 in OSCPlay exactly as you would a real tower, then run **Tools > Sensor Calibration...** on it.
 This is the way to exercise the whole calibration pipeline without touching the installation.
 
@@ -219,7 +249,8 @@ simulate something unusual. Use the same address as the recording's **Address fi
 | `--csv FILE` | | also write `timestamp,magx,magy,magz` |
 | `--no-send` | | don't send; fast-forwards for `--csv` or `--check` |
 
-Calibrate mode: `--hold` (3.0s), `--move` (1.0s), `--arc` (270), `--step` (10), `--check`.
+Calibrate mode: `--hold` (3.0s), `--move` (1.0s), `--arc` (270), `--step` (10, the mark spacing),
+`--check`. Keep `--step` the same as the calibration's mark spacing.
 
 Play mode: `--period` (2.8s, the ring's natural period on its bands), `--damping` (0.18; below 1
 swings through centre).
