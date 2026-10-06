@@ -65,8 +65,10 @@ Patterns are typically implemented as Java classes that extend the LXPattern cla
 You will need to be able to edit Java source code and build a JAR file.  Maven is used
 for building JAR files.  You will need to install a recent Maven version and JDK version 17.
 Once the prerequisites are installed, you can build the JAR file by running 'mvn package'.
-You can instal the JAR file by running 'mvn install'.  The JAR file will be placed in your
-~/Chromatik/Packages folder.  Note Chromatik must not be running when you run 'mvn install' 
+You can install the JAR file by running 'mvn -Pinstall install'.  The install profile copies
+Interlace-<version>-jar-with-dependencies.jar, which bundles the JOGL libraries, into your
+~/Chromatik/Packages folder; a plain 'mvn install' builds without copying anything there.
+Note Chromatik must not be running when you run 'mvn -Pinstall install' 
 because it will have the JAR file open, preventing the copy-over operation.
 
 * Maven: https://maven.apache.org/

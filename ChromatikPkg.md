@@ -28,6 +28,6 @@ This is a template repository used to demonstrate how to build a package for [Ch
 Packages are distributed as a JAR file containing all of the above copmonents.
 
 - Build with `mvn package`
-- Install via `mvn install`
+- Install via `mvn -Pinstall install`
 
-_Note that `mvn install` does **not** automatically copy static files from [`src/main/resources`](src/main/resources) into your root `~/Chromatik` folder. You can either perform this step manually, or by importing the package using the Chromatik UI._
+_Note that `mvn -Pinstall install` does **not** automatically copy static files from [`src/main/resources`](src/main/resources) into your root `~/Chromatik` folder. You can either perform this step manually, or by importing the package using the Chromatik UI._
