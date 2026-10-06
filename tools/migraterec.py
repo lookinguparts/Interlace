@@ -38,7 +38,7 @@ def process_mag_data(input_filename, output_filename):
                 # Create output in the same JSON format
                 output = {
                     "received_offset": offset,
-                    "msg": f"/lx/modulation/Mag1/mag {x} {y} {z}"
+                    "msg": f"/mag1/xyz {x} {y} {z}"
                 }
                 json.dump(output, f)
                 f.write('\n')

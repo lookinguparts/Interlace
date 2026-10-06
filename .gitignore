@@ -8,6 +8,10 @@
 
 
 
+# Python
+__pycache__/
+*.pyc
+
 # Log file
 *.log
 
