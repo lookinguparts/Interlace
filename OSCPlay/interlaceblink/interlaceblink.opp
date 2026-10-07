@@ -1,0 +1,38 @@
+{
+  "projectName" : "interlaceblink",
+  "playbackMode" : "WITH_REWRITE",
+  "outputs" : [ {
+    "id" : "default",
+    "host" : "127.0.0.1",
+    "port" : 3030,
+    "enabled" : true,
+    "nodeChain" : {
+      "nodes" : [ {
+        "type" : "xyz.theforks.nodes.InterlaceMagNode",
+        "enabled" : true,
+        "args" : [ "1" ]
+      }, {
+        "type" : "xyz.theforks.nodes.InterlaceMagNode",
+        "enabled" : true,
+        "args" : [ "2" ]
+      }, {
+        "type" : "xyz.theforks.nodes.InterlaceMagNode",
+        "enabled" : true,
+        "args" : [ "3" ]
+      }, {
+        "type" : "xyz.theforks.nodes.RenameNode",
+        "enabled" : true,
+        "args" : [ "/mag[123]/xyz", "/mag(\\d)/xyz", "/lx/modulation/Angles/angle$1" ]
+      }, {
+        "type" : "xyz.theforks.nodes.RemapNodeF",
+        "enabled" : true,
+        "args" : [ "/lx/modulation/Angles/angle[123]", "0.0", "270.0", "0.0", "1.0", "true" ]
+      } ]
+    }
+  } ],
+  "midiMappings" : { },
+  "midiDeviceName" : null,
+  "inHost" : "127.0.0.1",
+  "inPort" : 8000,
+  "inProtocol" : "UDP"
+}
