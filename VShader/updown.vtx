@@ -1,0 +1,116 @@
+/*{
+  "DESCRIPTION": "comet strips",
+  "CREDIT": "Tracy Scott",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "palval",
+      "TYPE": "float",
+      "DEFAULT": 15.2,
+      "MIN": 0.0,
+      "MAX": 20.0
+    },
+    {
+      "NAME": "pald",
+      "TYPE": "float",
+      "DEFAULT": 0.6396,
+      "MIN": 0.1,
+      "MAX": 10.0
+    },
+    {
+      "NAME": "paloff",
+      "TYPE": "float",
+      "DEFAULT": 0.6291,
+      "MIN": 0.0,
+      "MAX": 1.0
+    },
+    {
+      "NAME": "glow",
+      "TYPE": "float",
+      "DEFAULT": 4.073,
+      "MIN": 0.5,
+      "MAX": 8.0
+    },
+    {
+      "NAME": "comets",
+      "TYPE": "float",
+      "DEFAULT": 3.618,
+      "MIN": 1.0,
+      "MAX": 6.0
+    },
+    {
+      "NAME": "trail",
+      "TYPE": "float",
+      "DEFAULT": 0.2435,
+      "MIN": 0.03,
+      "MAX": 0.6
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float palval;
+uniform float pald;
+uniform float paloff;
+uniform float glow;
+uniform float comets;
+uniform float trail;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <palettes.vti>
+#include <uvwrap.vti>
+
+float hash11(float p) {
+  p = fract(p * 0.1031);
+  p *= p + 33.33;
+  p *= p + p;
+  return fract(p);
+}
+
+void main() {
+  // Wrap the LED onto the tower: p.x = angle around the vertical axis [0,1),
+  // p.y = height [0,1).
+  vec2 p = uvwrap(position);
+  float h = clamp(p.y, 0.0, 1.0);
+
+  // Split the circumference into vertical strips; alternate travel direction
+  // on adjacent strips (up / down / up / down ...).
+  const float STRIPS = 16.0;
+  float si  = floor(p.x * STRIPS);
+  float dir = (mod(si, 2.0) < 0.5) ? 1.0 : -1.0;
+
+  // Coordinate along the strip, always increasing in the direction of travel.
+  float a = (dir > 0.0) ? h : (1.0 - h);
+
+  float n   = max(1.0, floor(comets + 0.5));   // comets per strip
+  float off = hash11(si + 3.0);                // random phase per strip
+  float spd = 0.22;
+
+  float best  = 0.0;
+  float bestB = 0.0;
+
+  for (int j = 0; j < 6; j++) {
+    float fj   = float(j);
+    float on   = step(fj, n - 0.5);                     // only n comets active
+    float head = fract(fTime * spd + off + fj / n);     // head position
+    float d    = fract(a - head + 0.5) - 0.5;           // signed offset from head
+    float b    = -d;                                    // b > 0 means behind the head
+    float tail  = exp(-max(b, 0.0) / trail);            // long tapering tail
+    float front = exp(-max(-b, 0.0) / 0.025);           // sharp leading edge
+    float body  = tail * front;
+    float core  = exp(-abs(b) / 0.035);                 // tight bright head
+    float v = on * (body * 0.8 + pow(core, glow));
+    if (v > best) { best = v; bestB = b; }
+  }
+
+  vec3 col = paletteN(paloff + max(bestB, 0.0) * pald + fTime * 0.05, palval);
+  outColor = clamp(col * clamp(best, 0.0, 1.0), 0.0, 1.0);
+}
