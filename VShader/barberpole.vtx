@@ -1,0 +1,134 @@
+/*{
+  "DESCRIPTION": "barberpole",
+  "CREDIT": "CkShaderStudio",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "strpn",
+      "TYPE": "float",
+      "DEFAULT": 2.1349,
+      "MIN": 1.0,
+      "MAX": 40.0
+    },
+    {
+      "NAME": "skew",
+      "TYPE": "float",
+      "DEFAULT": 0.96,
+      "MIN": 0.0,
+      "MAX": 4.0
+    },
+    {
+      "NAME": "twst",
+      "TYPE": "float",
+      "DEFAULT": 0.0,
+      "MIN": -0.5,
+      "MAX": 0.5
+    },
+    {
+      "NAME": "palval",
+      "TYPE": "float",
+      "DEFAULT": 4.728,
+      "MIN": 0.0,
+      "MAX": 20.0
+    },
+    {
+      "NAME": "palofs",
+      "TYPE": "float",
+      "DEFAULT": 0.0,
+      "MIN": 0.0,
+      "MAX": 1.0
+    },
+    {
+      "NAME": "soft",
+      "TYPE": "float",
+      "DEFAULT": 0.3717,
+      "MIN": 0.01,
+      "MAX": 0.5
+    },
+    {
+      "NAME": "spd",
+      "TYPE": "float",
+      "DEFAULT": 3.0,
+      "MIN": -3.0,
+      "MAX": 3.0
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float strpn;
+uniform float skew;
+uniform float twst;
+uniform float palval;
+uniform float palofs;
+uniform float soft;
+uniform float spd;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <palettes.vti>
+#include <uvwrap.vti>
+
+void main() {
+  // Wrap the LED position onto the cylinder: u = angle around the vertical axis [0,1),
+  // v = height [0,1].
+  vec2 p = uvwrap(position);
+  float u = p.x;
+  float v = p.y;
+
+  // Physical twist, driven by the angle sensor: holds the number of turns between the
+  // bottom of the pole and the top (positive / negative = the two twist directions).
+  // The clamp keeps a noisy or over-ranged sensor from folding the pattern back on itself.
+  float t = clamp(twst, -0.5, 0.5);
+
+  // Hyperboloid geometry. A twisted cylinder keeps its filaments straight, so the rotation
+  // grows linearly with height and the radius follows
+  //   r(y) = sqrt(cos(phi)^2 + y^2 * sin(phi)^2),  y in [-1, 1],
+  // where phi is the twist from the waist to either end in radians. At t = +-0.5 the waist
+  // closes to a point, which is the limit of the real structure.
+  float phi = t * M_PI;
+  float cph = cos(phi);
+  float sph = sin(phi);
+  float y   = 2.0 * v - 1.0;
+  float rc  = sqrt(cph * cph + y * y * sph * sph);
+
+  // The stripes are painted on the surface, so they ride the twist. Adding t * (v - 0.5)
+  // rotates the pattern with height while keeping it wrapped in u, so the seam at the back
+  // of the pole stays invisible. Everything is continuous in t, so the motion is smooth as
+  // the pole is twisted into and out of the hyperboloid.
+  float ut = u + t * (v - 0.5);
+
+  // The preview cylinder's circumference is about PI/2 times its height, so scaling u by
+  // M_PI_2 makes the diagonals come out at roughly 45 degrees on the real surface.
+  // skew lets you tilt the stripes; spd slides them along the pole.
+  float phase = (ut * M_PI_2 * skew + v) * strpn + fTime * spd;
+
+  float cell = floor(phase);
+  float f    = fract(phase);
+
+  // Three palette colours used in pairs: cell n blends colour n -> n+1, so the stripes
+  // read as A B B C C A A B ... like a classic barberpole.
+  // palofs slides the whole 3-colour set around the palette cycle (wrapped, so 0 and 1
+  // give the same result).
+  float a = fract(mod(cell, 3.0) / 3.0 + palofs);
+  float b = fract(mod(cell + 1.0, 3.0) / 3.0 + palofs);
+
+  // Crisp stripes with adjustable soft edges.
+  float s = smoothstep(0.5 - soft, 0.5 + soft, f);
+
+  vec3 col = mix(paletteN(a, palval), paletteN(b, palval), s);
+
+  // Waist highlight: the pinch glows where the hyperboloid narrows, so the twist reads as
+  // a shape change and not just as stripes sliding sideways. Zero when twst is zero.
+  float waist = 1.0 - rc;
+  col *= 1.0 + 0.85 * waist;
+
+  outColor = clamp(col, 0.0, 1.0);
+}

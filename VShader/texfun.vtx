@@ -1,0 +1,120 @@
+/*{
+  "DESCRIPTION": "twistfractal",
+  "CREDIT": "CkShaderStudio",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "zoom",
+      "TYPE": "float",
+      "DEFAULT": 1.5,
+      "MIN": 0.2,
+      "MAX": 8.0
+    },
+    {
+      "NAME": "flow",
+      "TYPE": "float",
+      "DEFAULT": 0.5,
+      "MIN": -3.0,
+      "MAX": 3.0
+    },
+    {
+      "NAME": "shear",
+      "TYPE": "float",
+      "DEFAULT": 25.0,
+      "MIN": -120.0,
+      "MAX": 120.0
+    },
+    {
+      "NAME": "warp",
+      "TYPE": "float",
+      "DEFAULT": 0.2,
+      "MIN": 0.0,
+      "MAX": 0.9
+    },
+    {
+      "NAME": "palval",
+      "TYPE": "float",
+      "DEFAULT": 3.0,
+      "MIN": 0.0,
+      "MAX": 20.0
+    },
+    {
+      "NAME": "glow",
+      "TYPE": "float",
+      "DEFAULT": 1.2,
+      "MIN": 0.1,
+      "MAX": 2.5
+    },
+    {
+      "NAME": "full",
+      "TYPE": "float",
+      "DEFAULT": 0.5964,
+      "MIN": 0.0,
+      "MAX": 1.0
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float zoom;
+uniform float flow;
+uniform float shear;
+uniform float warp;
+uniform float palval;
+uniform float glow;
+uniform float full;
+
+uniform sampler2D textureSampler;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <palettes.vti>
+#include <uvwrap.vti>
+
+void main() {
+  // Wrap the tower: p.x = angle around the vertical axis, p.y = height.
+  vec2 p = uvwrap(position);
+
+  // Horizontal radius. It is constant on a straight cylinder, but it grows
+  // with |height - 0.5| once the tower is twisted into a hyperboloid.
+  float r = length(vec2(position.x - 0.5, position.z - 0.5));
+
+  // The shear term keeps the image straight on a cylinder and smears it
+  // around the axis, symmetrically about the waist, as the tower bulges.
+  float u = p.x + fTime * 0.03 + shear * r;
+  float v = p.y * zoom - fTime * flow;
+
+  vec2 uv = vec2(u, v);
+  vec3 c = texture(textureSampler, uv).rgb;
+
+  // Feed-forward domain warp: the fractal nibbles at itself for a living swirl.
+  vec2 w = (c.rg - 0.5) * warp
+         + vec2(0.03 * sin(fTime * 0.7), -fTime * flow * 0.2);
+  vec3 c2 = texture(textureSampler, uv + w).rgb;
+
+  vec3 col = mix(c, c2, 0.65);
+
+  float lum = clamp(dot(col, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
+
+  vec3 pal = paletteN(fract(lum * 0.8 + p.y * 0.4 + r * 8.0 + fTime * 0.05), palval);
+
+  vec3 fin = mix(col, pal * (0.25 + 0.95 * lum), 0.55);
+
+  // Fill: the brightness knee slides from "only the hottest cells survive"
+  // (full = 0, mostly black) down to "everything lights up" (full = 1).
+  // The knee is smoothed, so LEDs near the boundary fade in continuously
+  // instead of snapping on, and the cut-off area breathes with the fractal.
+  float ener = clamp(dot(fin, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
+  float knee = mix(0.88, -0.02, full);
+  float soft = 0.14;
+  float mask = smoothstep(knee - soft, knee + soft, ener);
+
+  outColor = clamp(fin * mask * glow, 0.0, 1.0);
+}

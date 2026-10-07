@@ -1,0 +1,73 @@
+/*{
+  "DESCRIPTION": "halfgrad - LEDs between centre height (0.5) and the lvl slider are lit; nothing at 0.5",
+  "CREDIT": "by tracyscott",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "lvl",
+      "TYPE": "float",
+      "DEFAULT": 0.0,
+      "MIN": 0.0,
+      "MAX": 1.0
+    },
+    {
+      "NAME": "palval",
+      "TYPE": "float",
+      "DEFAULT": 9.06,
+      "MIN": 0.0,
+      "MAX": 20.0
+    },
+    {
+      "NAME": "pald",
+      "TYPE": "float",
+      "DEFAULT": 0.1,
+      "MIN": 0.1,
+      "MAX": 5.0
+    },
+    {
+      "NAME": "palo",
+      "TYPE": "float",
+      "DEFAULT": 0.448,
+      "MIN": 0.0,
+      "MAX": 1.0
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float lvl;
+uniform float palval;
+uniform float pald;
+uniform float palo;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <palettes.vti>
+#include <uvwrap.vti>
+
+void main() {
+  // Wrap the LED position onto the cylinder: p.x = angle [0,1), p.y = height [0,1].
+  vec2 p = uvwrap(position);
+
+  // The lit band runs from the centre height (0.5) out to lvl, on whichever side lvl is.
+  float lo = min(0.5, lvl);
+  float hi = max(0.5, lvl);
+
+  // One LED-row wide soft edge at each end of the band.
+  float edge = 0.01;
+  float mask = smoothstep(lo - edge, lo + edge, p.y) *
+               (1.0 - smoothstep(hi - edge, hi + edge, p.y));
+
+  // palo shifts where we sample the palette without changing its density.
+  float hue = fract(p.y * pald + palo);
+  vec3 col = paletteN(hue, palval) * mask;
+
+  outColor = clamp(col, 0.0, 1.0);
+}

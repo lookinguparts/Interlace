@@ -1,0 +1,120 @@
+/*{
+  "DESCRIPTION": "fireflies",
+  "CREDIT": "by tracyscott",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "dens",
+      "TYPE": "float",
+      "DEFAULT": 10.0,
+      "MIN": 3.0,
+      "MAX": 30.0
+    },
+    {
+      "NAME": "size",
+      "TYPE": "float",
+      "DEFAULT": 0.4673,
+      "MIN": 0.15,
+      "MAX": 2.5
+    },
+    {
+      "NAME": "spd",
+      "TYPE": "float",
+      "DEFAULT": 1.938,
+      "MIN": 0.0,
+      "MAX": 4.0
+    },
+    {
+      "NAME": "blnk",
+      "TYPE": "float",
+      "DEFAULT": 1.6,
+      "MIN": 0.0,
+      "MAX": 8.0
+    },
+    {
+      "NAME": "brt",
+      "TYPE": "float",
+      "DEFAULT": 1.2,
+      "MIN": 0.05,
+      "MAX": 3.0
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float dens;
+uniform float size;
+uniform float spd;
+uniform float blnk;
+uniform float brt;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <uvwrap.vti>
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 345.45));
+  p += dot(p, p + 34.345);
+  return fract(p.x * p.y);
+}
+
+void main() {
+  // Wrap the LED onto the cylinder: uv.x = angle [0,1), uv.y = height [0,1].
+  vec2 uv = uvwrap(position);
+
+  // Cells that are square in real space: the circumference is ~1.57x the height.
+  float cols = floor(dens + 0.5);
+  float rows = max(2.0, floor(cols * 0.637 + 0.5));
+
+  vec2 g = vec2(uv.x * cols, uv.y * rows);
+  vec2 cell = floor(g);
+  float t = fTime * spd;
+
+  vec3 accCol = vec3(0.0);
+
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 c = cell + vec2(float(i), float(j));
+
+      // Hash the WRAPPED column so the firefly at column 0 and the one that
+      // wraps in from column `cols` are the same firefly -> no seam.
+      vec2 hc = vec2(mod(c.x, cols), c.y);
+      float h1 = hash21(hc + 0.13);
+      float h2 = hash21(hc + 1.71);
+      float h3 = hash21(hc + 3.37);
+
+      // Resting spot inside the cell, plus a slow drifting wander.
+      vec2 fp = c + vec2(0.15 + 0.70 * h1, 0.15 + 0.70 * h2);
+      fp += 0.22 * vec2(sin(t * (0.8 + h1) + h2 * 6.2831),
+                        cos(t * (0.7 + h3) + h1 * 6.2831));
+
+      // Distance from this LED, wrapped around the cylinder seam.
+      vec2 d = g - fp;
+      d.x -= cols * floor(d.x / cols + 0.5);
+
+      float d2 = dot(d, d);
+      float glow = exp(-d2 / (size * size));
+
+      // Blink: a sharp flash with a faint resting afterglow. blnk = 0 means steady.
+      float rate = blnk * (0.5 + h3);
+      float p = sin(t * rate + h1 * 6.2831);
+      float pulse = pow(max(p, 0.0), 3.0);
+      float amp = smoothstep(0.0, 0.5, blnk);
+      float bright = (0.06 + 0.94 * mix(1.0, pulse, amp)) * (0.35 + 0.65 * h2);
+
+      vec3 col = mix(vec3(1.0, 0.72, 0.12), vec3(0.62, 1.0, 0.22), h2);
+      col = mix(col, vec3(1.0, 1.0, 0.92), 0.55 * glow * glow);
+
+      accCol += col * glow * bright;
+    }
+  }
+
+  outColor = clamp(accCol * brt, 0.0, 1.0);
+}

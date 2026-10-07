@@ -1,0 +1,154 @@
+/*{
+  "DESCRIPTION": "sdfshapes - tumbling lattice of SDF solids drawn as glowing contour shells",
+  "CREDIT": "by tracyscott",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "dens",
+      "TYPE": "float",
+      "DEFAULT": 3.2595,
+      "MIN": 1.5,
+      "MAX": 6.0
+    },
+    {
+      "NAME": "thick",
+      "TYPE": "float",
+      "DEFAULT": 0.08,
+      "MIN": 0.02,
+      "MAX": 0.25
+    },
+    {
+      "NAME": "wob",
+      "TYPE": "float",
+      "DEFAULT": 0.2895,
+      "MIN": 0.0,
+      "MAX": 1.5
+    },
+    {
+      "NAME": "spd",
+      "TYPE": "float",
+      "DEFAULT": 1.938,
+      "MIN": 0.0,
+      "MAX": 3.0
+    },
+    {
+      "NAME": "pal",
+      "TYPE": "float",
+      "DEFAULT": 5.94,
+      "MIN": 0.0,
+      "MAX": 20.0
+    },
+    {
+      "NAME": "brt",
+      "TYPE": "float",
+      "DEFAULT": 1.2,
+      "MIN": 0.05,
+      "MAX": 2.0
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float dens;
+uniform float thick;
+uniform float wob;
+uniform float spd;
+uniform float pal;
+uniform float brt;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <palettes.vti>
+
+mat2 rot2(float a) {
+  float c = cos(a), s = sin(a);
+  return mat2(c, s, -s, c);
+}
+
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float sdSphere(vec3 p, float r) { return length(p) - r; }
+
+float sdBox(vec3 p, vec3 b) {
+  vec3 d = abs(p) - b;
+  return length(max(d, 0.0)) + min(max(d.x, max(d.y, d.z)), 0.0);
+}
+
+float sdTorus(vec3 p, vec2 t) {
+  vec2 q = vec2(length(p.xz) - t.x, p.y);
+  return length(q) - t.y;
+}
+
+float sdOcta(vec3 p, float s) {
+  p = abs(p);
+  return (p.x + p.y + p.z - s) * 0.57735027;
+}
+
+float sdCapsule(vec3 p, float h, float r) {
+  p.y -= clamp(p.y, -h, h);
+  return length(p) - r;
+}
+
+void main() {
+  float t = fTime * spd;
+
+  // [-1,1]^3 cube space (aspect is 1:1:1, so distances are isotropic)
+  vec3 q = (position - 0.5) * 2.0;
+
+  // slow global tumble of the whole lattice
+  q.xz = rot2(t * 0.35) * q.xz;
+  q.xy = rot2(t * 0.21) * q.xy;
+  q.yz = rot2(t * 0.13) * q.yz;
+
+  // repeat into a lattice of cells: g spans [0,dens] over the unit cube
+  vec3 g  = (q * 0.5 + 0.5) * dens;
+  vec3 c  = floor(g);
+  vec3 lp = g - c - 0.5;              // local coords, [-0.5,0.5]^3
+
+  float h  = hash13(c);
+  float h2 = hash13(c + 31.7);
+
+  // each cell spins its own shape at its own rate
+  lp.xz = rot2(t * (0.5 + h  * 1.3) + h  * 6.2831853) * lp.xz;
+  lp.xy = rot2(t * (0.4 + h2 * 1.1) + h2 * 6.2831853) * lp.xy;
+
+  float r = 0.34 * (0.7 + 0.6 * h2);
+
+  float d;
+  if      (h < 0.2) d = sdSphere(lp, r);
+  else if (h < 0.4) d = sdBox(lp, vec3(r * 0.75));
+  else if (h < 0.6) d = sdTorus(lp, vec2(r * 0.72, r * 0.32));
+  else if (h < 0.8) d = sdOcta(lp, r * 1.15);
+  else              d = sdCapsule(lp, r * 0.6, r * 0.45);
+
+  // optional organic wobble of the surface
+  d += wob * 0.12 * sin(lp.x * 8.0 + t * 2.0)
+                 * sin(lp.y * 8.0 - t * 1.5)
+                 * sin(lp.z * 8.0 + t * 1.1);
+
+  // distance in normalized (LED) units: one cell is 1/dens wide
+  float dn = abs(d) / dens;
+
+  float bands = 0.5 + 0.5 * sin(dn * 36.0 - t * 2.0);
+
+  // bright shell hugging the surface, plus a fading contoured interior
+  float surf = 1.0 - smoothstep(thick * 0.35, thick, dn);
+  float core = exp(-dn * 7.0) * (1.0 - smoothstep(-thick * 2.0, 0.0, d));
+  float m = clamp(surf * (0.65 + 0.35 * bands) + 0.45 * core, 0.0, 1.0);
+
+  float hue = fract(h * 0.55 + h2 * 0.25 + 0.20 * q.y + 0.06 * t + 0.18 * bands);
+
+  vec3 col = paletteN(hue, pal) * m;
+  outColor = clamp(col * brt, 0.0, 1.0);
+}

@@ -1,0 +1,123 @@
+/*{
+  "DESCRIPTION": "point light spiralling down a cylinder",
+  "CREDIT": "by tracyscott",
+  "ISFVSN": "2.0",
+  "CATEGORIES": [
+    "VERTEX SDF"
+  ],
+  "INPUTS": [
+    {
+      "NAME": "size",
+      "TYPE": "float",
+      "DEFAULT": 0.2278,
+      "MIN": 0.02,
+      "MAX": 1.0
+    },
+    {
+      "NAME": "tiles",
+      "TYPE": "float",
+      "DEFAULT": 4.047,
+      "MIN": 1.0,
+      "MAX": 12.0
+    },
+    {
+      "NAME": "spd",
+      "TYPE": "float",
+      "DEFAULT": 0.15,
+      "MIN": -1.0,
+      "MAX": 1.0
+    },
+    {
+      "NAME": "turns",
+      "TYPE": "float",
+      "DEFAULT": 3.0,
+      "MIN": 1.0,
+      "MAX": 12.0
+    },
+    {
+      "NAME": "pal",
+      "TYPE": "float",
+      "DEFAULT": 6.2,
+      "MIN": 0.0,
+      "MAX": 20.0
+    },
+    {
+      "NAME": "pald",
+      "TYPE": "float",
+      "DEFAULT": 0.7435,
+      "MIN": 0.1,
+      "MAX": 10.0
+    },
+    {
+      "NAME": "palo",
+      "TYPE": "float",
+      "DEFAULT": 0.408,
+      "MIN": 0.0,
+      "MAX": 1.0
+    }
+  ]
+}*/
+
+#version 330
+
+uniform float fTime;
+uniform float size;
+uniform float tiles;
+uniform float spd;
+uniform float turns;
+uniform float pal;
+uniform float pald;
+uniform float palo;
+
+layout(location = 0) in vec3 position;
+out vec3 outColor;
+
+#include <consts.vti>
+#include <palettes.vti>
+#include <uvwrap.vti>
+
+void main() {
+  // Wrap the LED onto the cylinder: p.x = angle around the axis [0,1), p.y = height [0,1)
+  vec2 p = uvwrap(position);
+
+  // Travel phase: 0 at the top, 1 at the bottom, then loops.
+  float s  = fract(fTime * spd);
+  float lu = fract(s * turns);   // light angle
+  float lv = 1.0 - s;            // light height (descends)
+
+  // Vertical tiling: how many copies, evenly stacked down the height.
+  float n   = max(1.0, floor(tiles + 0.5));
+  float inv = 1.0 / n;
+
+  vec3 acc = vec3(0.0);
+
+  for (int k = 0; k < 12; k++) {
+    if (float(k) >= n) break;
+
+    float fk = float(k);
+
+    // Height of this copy of the light, wrapped over the top/bottom seam.
+    float lvk = lv + fk * inv;
+
+    // Every other copy is shifted half way around the cylinder.
+    float luk = lu + 0.5 * mod(fk, 2.0);
+
+    // Angular offset, wrapped to the shortest way around.
+    float du = p.x - luk;
+    du -= floor(du + 0.5);
+    float dv = p.y - lvk;
+    dv -= floor(dv + 0.5);
+
+    // One trip around the cylinder is about 1.412x the height, so weight u to keep the glow round.
+    float d = length(vec2(du * 1.412, dv));
+
+    float t    = d / max(size, 0.001);
+    float glow = exp(-t * t * 2.2);
+
+    vec3 col = paletteN(clamp(t * pald + palo, 0.0, 1.0), pal);
+
+    acc = max(acc, glow * col);
+  }
+
+  outColor = clamp(acc * 1.6, 0.0, 1.0);
+}
